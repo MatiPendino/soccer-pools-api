@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class BetConfig(AppConfig):
+class CustomUserConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.bet'
+    name = 'apps.custom_user'

@@ -41,12 +41,14 @@ BASE_APPS = [
 
 LOCAL_APPS = [
     'apps.bet',
+    'apps.custom_user',
     'apps.league',
     'apps.match',
 ]
 
 THIRD_APPS = [
     'rest_framework',
+    'import_export'
 ]
 
 INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_APPS 
@@ -128,6 +130,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_ROOT = 'media'
+MEDIA_URL = '/media/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

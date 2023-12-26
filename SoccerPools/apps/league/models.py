@@ -12,10 +12,29 @@ class League(BaseModel):
     
 
 class Round(BaseModel):
+    NOT_STARTED_ROUND = 0
+    PENDING_ROUND = 1
+    FINALIZED_ROUND = 2
+    STATE_CODES = (
+        (NOT_STARTED_ROUND, 'Not started'),
+        (PENDING_ROUND, 'Pending'),
+        (FINALIZED_ROUND, 'Finalized'),
+    )
+
+
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, help_text='Must be written with no spaces')
-    
+    number_round = models.PositiveSmallIntegerField('Number of round', blank=True, null=True)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    round_state = models.PositiveSmallIntegerField('State of the round', default=0, choices=STATE_CODES)
+    pool = models.DecimalField(default=0, max_digits=8, decimal_places=2)
+    price_bet = models.DecimalField('Price of the bet', max_digits=10, decimal_places=2,  help_text='This is the amount which will be added to the pool', default=0)
+    fee_bet = models.DecimalField('Fee of the bet', max_digits=7, decimal_places=2, help_text='This is the amount for the platform', default=0)
+    league = models.ForeignKey(League, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f'{self.name} - {self.league}'
 
 
 class Team(BaseModel):
