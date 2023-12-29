@@ -8,14 +8,14 @@ class BetResources(resources.ModelResource):
         model = Bet
 
 class BetAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    search_fields = ('operation_code', 'custom_user__user__username', 'round__name')
-    list_display = ('get_custom_user', 'operation_code', 'get_round', 'points', 'winner')
+    search_fields = ('operation_code', 'user__username', 'round__name')
+    list_display = ('get_user', 'operation_code', 'get_round', 'points', 'winner')
     resource_class = BetResources
 
-    def get_custom_user(self, obj):
-        return obj.custom_user
-    get_custom_user.admin_order_field = 'custom_user__user__username'
-    get_custom_user.short_description = 'User'
+    def get_user(self, obj):
+        return obj.user
+    get_user.admin_order_field = 'user__username'
+    get_user.short_description = 'User'
 
     def get_round(self, obj):
         return obj.round

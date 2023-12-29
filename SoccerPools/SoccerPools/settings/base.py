@@ -22,10 +22,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-i-4si!(+k=$z^1-+d9z77fb1=xcuaf4vhqgh_bfio$oxvn8vu-'
 
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+# SECURE_CROSS_ORIGIN_OPENER_POLICY='same-origin-allow-popups'
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+]
+CORS_ALLOWED_CREDENTIALS = True
 
 
 # Application definition
@@ -41,19 +49,21 @@ BASE_APPS = [
 
 LOCAL_APPS = [
     'apps.bet',
-    'apps.custom_user',
+    'apps.app_user',
     'apps.league',
     'apps.match',
 ]
 
 THIRD_APPS = [
     'rest_framework',
-    'import_export'
+    'import_export',
+    'corsheaders'
 ]
 
 INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_APPS 
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -92,6 +102,17 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
+}
+
+AUTH_USER_MODEL = 'app_user.AppUser'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+    )
 }
 
 

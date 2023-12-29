@@ -1,18 +1,18 @@
 from django.contrib import admin
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
-from .models import CustomUser
+from .models import AppUser
 
-class CustomUserResources(resources.ModelResource):
+class AppUserResources(resources.ModelResource):
     class Meta:
-        model = CustomUser
+        model = AppUser
 
-class CustomUserAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'user__email')
-    list_display = ('get_username', 'get_email', 'get_first_name', 'get_last_name')
-    resource_class = CustomUserResources
+class AppUserAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    search_fields = ('username', 'name', 'last_name', 'email')
+    list_display = ('username', 'email', 'name', 'last_name')
+    resource_class = AppUserResources
 
-    def get_username(self, obj):
+    '''def get_username(self, obj):
         return obj.user.username
     get_username.short_description = 'Username'
 
@@ -26,6 +26,6 @@ class CustomUserAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
     def get_email(self, obj):
         return obj.user.email
-    get_email.short_description = 'Email'
+    get_email.short_description = 'Email'''
 
-admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(AppUser, AppUserAdmin)
