@@ -5,11 +5,13 @@ from django.conf import settings
 from django.views.static import serve
 from apps.league import urls as league_urls
 from apps.app_user import urls as user_urls
+from apps.bet import urls as bet_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/', include(user_urls)),
     path('leagues/', include(league_urls)),
+    path('bets/', include(bet_urls))
 ]
 
 urlpatterns += staticfiles_urlpatterns()
