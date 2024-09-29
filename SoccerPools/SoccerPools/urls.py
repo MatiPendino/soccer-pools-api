@@ -9,6 +9,8 @@ from apps.bet import urls as bet_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.jwt')),
     path('user/', include(user_urls)),
     path('leagues/', include(league_urls)),
     path('bets/', include(bet_urls))
