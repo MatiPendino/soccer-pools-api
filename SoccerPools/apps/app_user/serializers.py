@@ -6,20 +6,16 @@ User = get_user_model()
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'email', 'name', 'last_name', 'birthdate', 'profile_image', 'password')
+        fields = ('username', 'email', 'name', 'last_name', 'password')
 
     def create(self, clean_data):
         user_obj = User.objects.create_user(
             email=clean_data['email'], 
             password=clean_data['password'],
             username=clean_data['username'],
-            birthdate=clean_data['birthdate'],
             name=clean_data['name'],
             last_name=clean_data['last_name']
         )
-        if clean_data.get('profile_image'):
-            user_obj.profile_image = clean_data['profile_image']
-        user_obj.save()
         return user_obj
     
 

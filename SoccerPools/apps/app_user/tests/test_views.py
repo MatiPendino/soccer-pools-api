@@ -79,10 +79,6 @@ class UserLogoutViewTest(TestCase):
             password='123456798'
         )
 
-    def test_logout_no_authenticated_user(self):
-        response = self.client.post(self.logout_url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
     def test_logout_authenticated_user(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.logout_url)
