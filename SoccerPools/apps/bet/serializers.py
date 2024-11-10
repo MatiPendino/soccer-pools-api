@@ -7,13 +7,18 @@ class BetSerializer(serializers.ModelSerializer):
         fields = ('user', 'round', 'points', 'winner')
 
     def to_representation(self, instance):
-        return {
-            'username': instance.user.username,
-            'profile_image': instance.user.profile_image.url,
-            'round': instance.round.name,
-            'league': instance.round.league.name,
-            'winner': instance.winner,
-            'points': instance.points,
-            'n_players': instance.round.get_number_bets(),
-            'pool': instance.round.pool,
-        }
+        representation = super().to_representation(instance)
+        representation['username'] = instance.user.username
+        representation['profile_image'] = instance.user.profile_image.url
+        representation['round'] = instance.round.name
+        representation['league'] = instance.round.league.name
+        representation['n_players'] = instance.round.get_number_bets()
+        representation['pool'] = instance.round.pool
+        
+        return representation
+    
+
+class BetCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bet
+        fields = ('user', 'round')
