@@ -3,17 +3,13 @@ from django.urls import path, re_path, include
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf import settings
 from django.views.static import serve
-from apps.league import urls as league_urls
-from apps.app_user import urls as user_urls
-from apps.bet import urls as bet_urls
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('auth/', include('djoser.urls')),
-    path('auth/', include('djoser.urls.jwt')),
-    path('user/', include(user_urls)),
-    path('leagues/', include(league_urls)),
-    path('bets/', include(bet_urls))
+    path('soccer_admin/doc/', include('django.contrib.admindocs.urls')),
+    path('soccer_admin/', admin.site.urls),
+    path('api/', include('djoser.urls')),
+    path('api/', include('djoser.urls.jwt')),
+    path('api/', include('apps.api.urls')),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
