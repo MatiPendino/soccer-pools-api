@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework import permissions, status
+from apps.bet.models import Bet
 from .serializers import UserLoginSerializer, UserRegisterSerializer, UserSerializer
 
 
@@ -45,3 +46,13 @@ class UserView(APIView):
         serializer = UserSerializer(request.user)
         response = Response({'user': serializer.data}, status=status.HTTP_200_OK)
         return response
+    
+
+class UserInLeague(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        if Bet.objects.filter(user=request.user).exists():
+            return Response({'in_league': True})
+        
+        return Response({'in_league': False})

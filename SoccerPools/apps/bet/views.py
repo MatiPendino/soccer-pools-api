@@ -36,7 +36,19 @@ class BetCreateApiView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LeagueBetsCreateApiView(APIView):
+class LeagueBetsMatchResultsCreateApiView(APIView):
+    '''
+        Creates Bet and MatchResult instances for the League selected by the user
+
+        Payload:
+        league_id -> Integer
+        user_id -> Integer
+
+        Response:
+        league (String): Name of the league.
+        user (String): Username of the user.
+        bets (List): List of dictionaries containing `bet_id` and `round_id` for each created Bet.
+    '''
     permissions_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
@@ -45,9 +57,11 @@ class LeagueBetsCreateApiView(APIView):
         rounds = Round.objects.filter(league=league)
 
         with transaction.atomic():
+            # Creates bets for all the league rounds
             bets = [Bet(round=league_round, user=user) for league_round in rounds]
             Bet.objects.bulk_create(bets)
 
+            # Creates match results for all the matches in all the bets
             for bet in bets:
                 matches = Match.objects.filter(round=bet.round)
                 match_results = [MatchResult(match=soccer_match, bet=bet) for soccer_match in matches]
