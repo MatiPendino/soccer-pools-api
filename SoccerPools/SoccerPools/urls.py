@@ -3,6 +3,7 @@ from django.urls import path, re_path, include
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf import settings
 from django.views.static import serve
+from debug_toolbar.toolbar import debug_toolbar_urls
 
 urlpatterns = [
     path('soccer_admin/doc/', include('django.contrib.admindocs.urls')),
@@ -18,4 +19,5 @@ urlpatterns += [
         'document_root': settings.MEDIA_ROOT,
     })
 ]
+urlpatterns += debug_toolbar_urls()
 
