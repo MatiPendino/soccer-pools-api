@@ -52,8 +52,8 @@ class LeagueBetsMatchResultsCreateApiView(APIView):
     permissions_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
-        league = get_object_or_404(League, id=request.data['league_id'])
-        user = get_object_or_404(AppUser, id=request.data['user_id'])
+        league = get_object_or_404(League, slug=request.data['league_slug'])
+        user = request.user
         rounds = Round.objects.filter(league=league)
 
         with transaction.atomic():
