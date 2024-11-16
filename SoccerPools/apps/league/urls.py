@@ -8,6 +8,7 @@ urlpatterns = [
     path('current_rounds/', CurrentRoundsListApiView.as_view(), name='current_rounds'),
     path('expired_rounds/', ExpiredRoundsListApiView.as_view(), name='expired_rounds'),
     path('round/<int:pk>/', RoundRetrieveApiView.as_view(), name='round_retrieve'),
+    path('rounds/league/<int:pk>/', RoundListApiView.as_view(), name='rounds_league'),
     path('team/', TeamListApiView.as_view(), name='team_list'),
     path('team/<int:pk>/', TeamRetrieveApiView.as_view(), name='team_retrieve'),
 ]

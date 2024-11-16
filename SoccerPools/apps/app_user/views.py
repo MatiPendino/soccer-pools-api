@@ -1,9 +1,12 @@
 from django.contrib.auth import login, logout
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from apps.bet.models import Bet
+from apps.league.models import League
+from apps.league.serializers import LeagueSerializer
 from .serializers import UserLoginSerializer, UserRegisterSerializer, UserSerializer
 
 
@@ -56,3 +59,17 @@ class UserInLeague(APIView):
             return Response({'in_league': True})
         
         return Response({'in_league': False})
+    
+
+class UserLeague(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        try:
+            bet = Bet.objects.filter(user=request.user).first()
+            league = League.objects.filter(round__bet=bet).distinct().first()
+            league_serializer = LeagueSerializer(league)
+
+            return Response(league_serializer.data)
+        except Exception as err:
+            return Response({'error': str(err)}, status=status.HTTP_400_BAD_REQUEST)

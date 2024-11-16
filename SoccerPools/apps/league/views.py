@@ -26,6 +26,14 @@ class ExpiredRoundsListApiView(generics.ListAPIView):
     queryset = Round.objects.filter(state=True, round_state=Round.FINALIZED_ROUND)
 
 
+class RoundListApiView(generics.ListAPIView):
+    serializer_class = RoundSerializer
+
+    def get_queryset(self):
+        rounds = Round.objects.filter(league__id=self.kwargs['pk'])
+        return rounds
+
+
 class RoundRetrieveApiView(generics.RetrieveAPIView):
     serializer_class = RoundSerializer
     queryset = Round.objects.filter(state=True)

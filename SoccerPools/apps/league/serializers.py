@@ -4,13 +4,16 @@ from .models import League, Round, Team
 class LeagueSerializer(serializers.ModelSerializer):
     class Meta:
         model = League
-        exclude = ('state', 'creation_date', 'updating_date')
+        fields = ('id', 'name', 'slug', 'logo')
 
 
 class RoundSerializer(serializers.ModelSerializer):
     class Meta:
         model = Round
-        exclude = ('state', 'creation_date', 'updating_date')
+        fields = (
+            'name', 'slug', 'number_round', 'start_date', 'end_date', 'round_state',
+            'league'
+        )
 
     league = LeagueSerializer()
 
@@ -18,6 +21,6 @@ class RoundSerializer(serializers.ModelSerializer):
 class TeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
-        exclude = ('state', 'creation_date', 'updating_date')
+        fields = ('name', 'badge', 'slug', 'league')
 
     league = LeagueSerializer()
