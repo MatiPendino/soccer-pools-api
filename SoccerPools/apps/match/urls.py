@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import MatchResultsCreateApiView
+from .views import *
 
 urlpatterns = [
-    path('match_results/', MatchResultsCreateApiView.as_view(), name='match_results'),
+    path('match_results/', MatchResultsListCreateApiView.as_view(), name='match_results'),
 ]

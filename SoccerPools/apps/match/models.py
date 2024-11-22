@@ -19,7 +19,12 @@ class Match(BaseModel):
 
     def get_team_names(self):
         return [self.team_1.name, self.team_2.name]
+    
+    def get_team_acronyms(self):
+        return [self.team_1.acronym, self.team_2.acronym]
 
+    def get_team_badges(self):
+        return [self.team_1.badge.url, self.team_2.badge.url]
 
 
 class MatchResult(BaseModel):

@@ -61,7 +61,7 @@ class UserInLeague(APIView):
         return Response({'in_league': False})
     
 
-class UserLeague(APIView):
+class LeagueUser(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
