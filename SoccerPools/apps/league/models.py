@@ -51,6 +51,7 @@ class Round(BaseModel):
 class Team(BaseModel):
     name = models.CharField(max_length=150)
     slug = models.SlugField(unique=True, null=True, blank=True)
+    acronym = models.CharField(max_length=5, null=True, blank=True, help_text='Shorter way to display team name')
     badge = models.ImageField('Badge of the team', upload_to='league', null=True, blank=True)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
 
