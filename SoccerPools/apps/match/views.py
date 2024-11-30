@@ -21,3 +21,12 @@ class MatchResultsListCreateApiView(generics.ListCreateAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class MatchResultsUpdateApiView(APIView):
+    permission_class = (permissions.IsAuthenticated,)
+
+    def post(self, request):
+        print(request.data)
+
+        return Response({'tuki': 'ok'})
