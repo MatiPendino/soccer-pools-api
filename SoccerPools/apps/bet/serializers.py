@@ -4,18 +4,17 @@ from .models import Bet
 class BetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bet
-        fields = ('user', 'round', 'points', 'winner')
+        fields = ('id', 'user', 'round', 'points', 'operation_code')
 
     def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['username'] = instance.user.username
-        representation['profile_image'] = instance.user.profile_image.url
-        representation['round'] = instance.round.name
-        representation['league'] = instance.round.league.name
-        representation['n_players'] = instance.round.get_number_bets()
-        representation['pool'] = instance.round.pool
-        
-        return representation
+        return {
+            'id': instance.id,
+            'username': instance.user.username,
+            'profile_image': instance.user.profile_image.url,
+            'points': instance.points,
+            'operation_code': instance.operation_code,
+            'round_id': instance.round.id
+        }
     
 
 class BetCreateSerializer(serializers.ModelSerializer):

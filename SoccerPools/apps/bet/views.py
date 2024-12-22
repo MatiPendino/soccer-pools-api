@@ -9,13 +9,14 @@ from apps.app_user.models import AppUser
 from .serializers import BetSerializer, BetCreateSerializer
 from .models import Bet
 
-class LastFourWinnersView(generics.ListAPIView):
-    permission_classes = (permissions.AllowAny,)
+class BetResultsApiView(generics.ListAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = BetSerializer
 
     def get_queryset(self):
-        winner_bets = Bet.objects.filter(winner=True).order_by('-updating_date')[:4]
-        return winner_bets
+        slug = self.request.query_params.get('slug')
+        bets = Bet.objects.filter(round__slug=slug).order_by('-points')
+        return bets
 
 
 class BetCreateApiView(APIView):

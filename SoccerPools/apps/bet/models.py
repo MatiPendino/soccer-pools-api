@@ -6,7 +6,7 @@ from apps.league.models import Round
 
 class Bet(BaseModel):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
-    operation_code = models.CharField(max_length=20, null=True)
+    operation_code = models.CharField(max_length=20, null=True, blank=True)
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
     points = models.PositiveSmallIntegerField(default=0)
     winner = models.BooleanField(default=False)
