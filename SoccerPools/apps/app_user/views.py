@@ -1,11 +1,13 @@
 from django.contrib.auth import login, logout
 from django.shortcuts import get_object_or_404
+from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
-from rest_framework import permissions, status
+from rest_framework import permissions, status, generics
 from apps.bet.models import Bet
 from apps.league.models import League
+from apps.match.models import MatchResult
 from apps.league.serializers import LeagueSerializer
 from .serializers import UserLoginSerializer, UserRegisterSerializer, UserSerializer
 
@@ -50,12 +52,31 @@ class UserView(APIView):
         response = Response({'user': serializer.data}, status=status.HTTP_200_OK)
         return response
     
+class UserDestroyApiView(APIView):
+    '''
+        The User, and all their bets and match results will be logically removed
+    '''
+    def delete(self, request, *args, **kwargs):
+        user = request.user
+        if user:
+            with transaction.atomic():
+                user.is_active = False
+                user.save()
+
+                bets = Bet.objects.filter(user=user, state=True)
+                match_results = MatchResult.objects.filter(bet__in=bets, state=True)
+                match_results.update(state=False)
+                bets.update(state=False)
+
+                return Response({'success': 'User removed successfully'}, status=status.HTTP_204_NO_CONTENT)
+        print('Shouldnt be here')
+        return Response({'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserInLeague(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
-        if Bet.objects.filter(user=request.user).exists():
+        if Bet.objects.filter(user=request.user, state=True).exists():
             return Response({'in_league': True})
         
         return Response({'in_league': False})
@@ -66,8 +87,8 @@ class LeagueUser(APIView):
 
     def get(self, request):
         try:
-            bet = Bet.objects.filter(user=request.user).first()
-            league = League.objects.filter(round__bet=bet).distinct().first()
+            bet = Bet.objects.filter(user=request.user, state=True).first()
+            league = League.objects.filter(round__bet=bet, state=True).distinct().first()
             league_serializer = LeagueSerializer(league)
 
             return Response(league_serializer.data)

@@ -15,7 +15,7 @@ class BetResultsApiView(generics.ListAPIView):
 
     def get_queryset(self):
         slug = self.request.query_params.get('slug')
-        bets = Bet.objects.filter(round__slug=slug).order_by('-points')
+        bets = Bet.objects.filter(round__slug=slug, state=True).order_by('-points')
         return bets
 
 
@@ -26,7 +26,10 @@ class BetCreateApiView(APIView):
         serializer = BetCreateSerializer(data=request.data)
 
         if serializer.is_valid():
-            matches = Match.objects.filter(round=serializer.validated_data['round'])
+            matches = Match.objects.filter(
+                round=serializer.validated_data['round'], 
+                state=True
+            )
             with transaction.atomic():
                 bet = serializer.save()
                 match_results = [MatchResult(match=soccer_match, bet=bet) for soccer_match in matches]
@@ -55,7 +58,7 @@ class LeagueBetsMatchResultsCreateApiView(APIView):
     def post(self, request, *args, **kwargs):
         league = get_object_or_404(League, slug=request.data['league_slug'])
         user = request.user
-        rounds = Round.objects.filter(league=league)
+        rounds = Round.objects.filter(league=league, state=True)
 
         with transaction.atomic():
             # Creates bets for all the league rounds
@@ -64,7 +67,7 @@ class LeagueBetsMatchResultsCreateApiView(APIView):
 
             # Creates match results for all the matches in all the bets
             for bet in bets:
-                matches = Match.objects.filter(round=bet.round)
+                matches = Match.objects.filter(round=bet.round, state=True)
                 match_results = [MatchResult(match=soccer_match, bet=bet) for soccer_match in matches]
                 MatchResult.objects.bulk_create(match_results)
 

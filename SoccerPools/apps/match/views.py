@@ -12,7 +12,11 @@ class MatchResultsListCreateApiView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         round_id = self.request.query_params.get('round_id')
-        match_results = MatchResult.objects.filter(bet__round__id=round_id)
+        match_results = MatchResult.objects.filter(
+            bet__round__id=round_id,
+            bet__user=self.request.user,
+            state=True
+        )
         return match_results
     
     def post(self, request):

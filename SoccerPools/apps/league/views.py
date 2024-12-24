@@ -30,7 +30,7 @@ class RoundListApiView(generics.ListAPIView):
     serializer_class = RoundSerializer
 
     def get_queryset(self):
-        rounds = Round.objects.filter(league__id=self.kwargs['pk'])
+        rounds = Round.objects.filter(league__id=self.kwargs['pk'], state=True)
         return rounds
 
 
