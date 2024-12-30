@@ -4,6 +4,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf import settings
 from django.views.static import serve
 from debug_toolbar.toolbar import debug_toolbar_urls
+# from allauth.socialaccount.providers.google.views import oauth2_login, oauth2_callback
 
 urlpatterns = [
     path('soccer_admin/doc/', include('django.contrib.admindocs.urls')),
@@ -11,6 +12,7 @@ urlpatterns = [
     path('api/', include('djoser.urls')),
     path('api/', include('djoser.urls.jwt')),
     path('api/', include('apps.api.urls')),
+    path('auth/social/', include('djoser.social.urls')),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

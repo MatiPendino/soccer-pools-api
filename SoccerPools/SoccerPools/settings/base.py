@@ -45,10 +45,7 @@ THIRD_APPS = [
     'import_export',
     'corsheaders',
     'djoser',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
+    'social_django',
     'django.contrib.admindocs',
     'debug_toolbar',
 ]
@@ -57,7 +54,6 @@ INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_APPS
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
@@ -114,7 +110,24 @@ DJOSER = {
     'SERIALIZERS': {
         'user_create': 'apps.app_user.serializers.UserRegisterSerializer'
     },
+    'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': [
+        'com.soccer-pools-mobile.soccer-pools-mobile://auth', 
+        'http://localhost:19006/auth',
+    ],
 }
+
+AUTHENTICATION_BACKENDS = (
+    "social_core.backends.google.GoogleOAuth2",
+    "django.contrib.auth.backends.ModelBackend",
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_ANDROID_CLIENT_ID = config('SOCIAL_GOOGLE_OAUTH_ANDROID_CLIENT_ID')
+SOCIAL_AUTH_GOOOGLE_OAUTH2_SCOPE = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'openid'
+]
+SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = ['first_name', 'last_name']
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

@@ -1,14 +1,21 @@
+import requests
 from django.contrib.auth import login, logout
-from django.shortcuts import get_object_or_404
 from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework import permissions, status, generics
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.core.files.base import ContentFile
+from django.utils.text import slugify
 from apps.bet.models import Bet
 from apps.league.models import League
 from apps.match.models import MatchResult
 from apps.league.serializers import LeagueSerializer
+from .models import AppUser
 from .serializers import UserLoginSerializer, UserRegisterSerializer, UserSerializer
 
 
@@ -94,3 +101,50 @@ class LeagueUser(APIView):
             return Response(league_serializer.data)
         except Exception as err:
             return Response({'error': str(err)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GoogleLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        access_token = request.data.get("accessToken")
+        if not access_token:
+            return Response({"error": "Access token is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_info_url = "https://www.googleapis.com/userinfo/v2/me"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        user_info_response = requests.get(user_info_url, headers=headers)
+
+        if user_info_response.status_code != status.HTTP_200_OK:
+            return Response({"error": "Failed to retrieve user info"}, status=user_info_response.status_code)
+
+        user_info = user_info_response.json()
+        email = user_info.get("email")
+        first_name = user_info.get("given_name")
+        last_name = user_info.get("family_name")
+        full_name = user_info.get("name")
+        profile_pic = user_info.get('picture')
+
+        user, created = AppUser.objects.get_or_create(
+            email=email, 
+            defaults={
+                'username': slugify(full_name), 
+                'name': first_name, 
+                'last_name': last_name,
+            }
+        )
+
+        if created or not user.profile_image:
+            response = requests.get(profile_pic)
+            if response.status_code == status.HTTP_200_OK:
+                image_file = ContentFile(response.content)
+                user.profile_image.save(f"{user.username}_profile.jpg", image_file)
+                user.save()
+
+        refresh = RefreshToken.for_user(user)
+        tokens = {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        }
+
+        return Response(tokens)
