@@ -48,6 +48,7 @@ THIRD_APPS = [
     'social_django',
     'django.contrib.admindocs',
     'debug_toolbar',
+    'drf_spectacular',
 ]
 
 INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_APPS 
@@ -89,7 +90,8 @@ AUTH_USER_MODEL = 'app_user.AppUser'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
@@ -114,6 +116,13 @@ DJOSER = {
         'com.soccer-pools-mobile.soccer-pools-mobile://auth', 
         'http://localhost:19006/auth',
     ],
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'SoccerPools API',
+    'DESCRIPTION': 'API for SoccerPools project',
+    'VERSION': '1.0.0',
+    #'SERVE_INCLUDE_SCHEMA': False,
 }
 
 AUTHENTICATION_BACKENDS = (
