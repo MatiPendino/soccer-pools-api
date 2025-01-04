@@ -37,6 +37,7 @@ LOCAL_APPS = [
     'apps.app_user',
     'apps.league',
     'apps.match',
+    'apps.tournament',
 ]
 
 THIRD_APPS = [
