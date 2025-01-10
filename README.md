@@ -45,7 +45,6 @@ Create an .env file at the root of the project (same level as Dockerfile and doc
   POSTGRES_DB=soccer_pools_db
   POSTGRES_USER=your_db_user
   POSTGRES_PASSWORD=your_db_password
-  SOCIAL_GOOGLE_OAUTH_ANDROID_CLIENT_ID=your_google_oauth_android_client_id
 ```
 
 Build and start the Docker containers:
