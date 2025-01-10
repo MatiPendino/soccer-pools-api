@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from apps.league.models import Round, League
 from apps.match.models import Match, MatchResult
 from apps.app_user.models import AppUser
+from apps.tournament.models import TournamentUser
 from .serializers import BetSerializer, BetCreateSerializer
 from .models import Bet
 
@@ -14,8 +15,23 @@ class BetResultsApiView(generics.ListAPIView):
     serializer_class = BetSerializer
 
     def get_queryset(self):
-        slug = self.request.query_params.get('slug')
-        bets = Bet.objects.filter(round__slug=slug, state=True).order_by('-points')
+        round_slug = self.request.query_params.get('round_slug')
+        tournament_id = int(self.request.query_params.get('tournament_id'))
+
+        bets = Bet.objects.filter(
+            round__slug=round_slug, 
+            state=True
+        ).order_by('-points')
+
+        if tournament_id != 0:
+            tournament_users = TournamentUser.objects.filter(
+                tournament__id=tournament_id,
+                tournament_user_state=TournamentUser.ACCEPTED
+            )
+            users = [tournament_user.user for tournament_user in tournament_users]
+
+            bets = bets.filter(user__in=users)
+
         return bets
 
 

@@ -10,6 +10,15 @@ class Tournament(BaseModel):
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     admin_tournament = models.ForeignKey(AppUser, on_delete=models.SET_NULL, null=True, blank=True)
 
+    @property
+    def n_participants(self):
+        n_tournament_users = TournamentUser.objects.filter(
+            state=True,
+            tournament=self,
+            tournament_user_state=TournamentUser.ACCEPTED
+        ).count()
+        return n_tournament_users
+
     def __str__(self):
         return self.name
 
