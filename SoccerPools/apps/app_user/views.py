@@ -59,6 +59,7 @@ class UserView(APIView):
         response = Response({'user': serializer.data}, status=status.HTTP_200_OK)
         return response
     
+
 class UserDestroyApiView(APIView):
     '''
         The User, and all their bets and match results will be logically removed
@@ -76,7 +77,6 @@ class UserDestroyApiView(APIView):
                 bets.update(state=False)
 
                 return Response({'success': 'User removed successfully'}, status=status.HTTP_204_NO_CONTENT)
-        print('Shouldnt be here')
         return Response({'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserInLeague(APIView):
