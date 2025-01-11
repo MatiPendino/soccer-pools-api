@@ -5,10 +5,22 @@ from apps.bet.models import Bet
 
 
 class Match(BaseModel):
+    NOT_STARTED_MATCH = 0
+    PENDING_MATCH = 1
+    FINALIZED_MATCH = 2
+    CANCELLED_MATCH = 3
+    STATE_CODES = (
+        (NOT_STARTED_MATCH, 'Not started'),
+        (PENDING_MATCH, 'Pending'),
+        (FINALIZED_MATCH, 'Finalized'),
+        (CANCELLED_MATCH, 'Cancelled')
+    )
+
     team_1 = models.ForeignKey(Team, related_name='team_1', on_delete=models.CASCADE)
     team_2 = models.ForeignKey(Team, related_name='team_2', on_delete=models.CASCADE)
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
     start_date = models.DateTimeField('Start date of the match', blank=True, null=True)
+    match_state = models.PositiveSmallIntegerField('State of the match', default=0, choices=STATE_CODES)
 
     def __str__(self):
         return f'{self.team_1.name} vs {self.team_2.name} - {self.round.name}'

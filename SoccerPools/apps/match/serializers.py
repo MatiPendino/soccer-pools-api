@@ -1,18 +1,18 @@
 from rest_framework import serializers
-from .models import MatchResult
+from apps.league.serializers import RoundSerializer, TeamSerializer
+from .models import Match, MatchResult
+
+
+class MatchSerializer(serializers.ModelSerializer):
+    team_1 = TeamSerializer(read_only=True)
+    team_2 = TeamSerializer(read_only=True)
+    round = RoundSerializer(read_only=True)
+    class Meta:
+        model = Match
+        fields = ('id', 'team_1', 'team_2', 'round', 'start_date', 'match_state')
 
 class MatchResultSerializer(serializers.ModelSerializer):
+    match = MatchSerializer(read_only=True)
     class Meta:
         model = MatchResult
         fields = ('id', 'goals_team_1', 'goals_team_2', 'match')
-
-    def to_representation(self, instance):
-        return {
-            'id': instance.id,
-            'goals_team_1': instance.goals_team_1,
-            'goals_team_2': instance.goals_team_2,
-            'team_1': instance.match.get_team_acronyms()[0],
-            'team_2': instance.match.get_team_acronyms()[1],
-            'badge_team_1': instance.match.get_team_badges()[0] if instance.match.team_1.badge else '',
-            'badge_team_2': instance.match.get_team_badges()[1] if instance.match.team_2.badge else ''
-        }
