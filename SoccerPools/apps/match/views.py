@@ -1,9 +1,9 @@
 from rest_framework import status, permissions, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404, get_list_or_404
+from django.shortcuts import get_list_or_404
 from .serializers import MatchResultSerializer
-from .models import MatchResult
+from .models import MatchResult, Match
 
 
 class MatchResultsListCreateApiView(generics.ListCreateAPIView):
@@ -50,3 +50,18 @@ class MatchResultsUpdateApiView(APIView):
         MatchResult.objects.bulk_update(match_results, ['goals_team_1', 'goals_team_2'])
 
         return Response({'success': 'Match results updated successfully!'})
+    
+
+class MatchResultOriginalRetrieveApiView(APIView):
+    permission_class = (permissions.IsAuthenticated,)
+
+    def get(self, request, match_id):
+        match = Match.objects.get(id=match_id)
+        original_match_result = MatchResult.objects.filter( 
+            state=True, 
+            match=match,
+            original_result=True
+        ).first()
+        serializer = MatchResultSerializer(original_match_result)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
