@@ -43,8 +43,9 @@ class MatchResult(BaseModel):
     goals_team_1 = models.PositiveSmallIntegerField(default=0)
     goals_team_2 = models.PositiveSmallIntegerField(default=0)
     original_result = models.BooleanField('Original result', default=False)
-    bet = models.ForeignKey(Bet, on_delete=models.SET_NULL, null=True, blank=True)
+    bet = models.ForeignKey(Bet, related_name='match_result', on_delete=models.SET_NULL, null=True, blank=True)
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    points = models.PositiveSmallIntegerField(default=0)
 
     def __str__(self):
         nteam_1, nteam_2 = self.match.get_team_names()

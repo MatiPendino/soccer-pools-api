@@ -4,7 +4,7 @@ from .models import Bet
 class BetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bet
-        fields = ('id', 'user', 'round', 'points', 'operation_code')
+        fields = ('id', 'user', 'round', 'operation_code')
 
     def to_representation(self, instance):
         return {

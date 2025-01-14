@@ -15,4 +15,4 @@ class MatchResultSerializer(serializers.ModelSerializer):
     match = MatchSerializer(read_only=True)
     class Meta:
         model = MatchResult
-        fields = ('id', 'goals_team_1', 'goals_team_2', 'match')
+        fields = ('id', 'goals_team_1', 'goals_team_2', 'match', 'points')

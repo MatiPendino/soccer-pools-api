@@ -2,6 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db import transaction
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from apps.league.models import Round, League
 from apps.match.models import Match, MatchResult
@@ -21,7 +22,9 @@ class BetResultsApiView(generics.ListAPIView):
         bets = Bet.objects.filter(
             round__slug=round_slug, 
             state=True
-        ).order_by('-points')
+        ).annotate(
+            matches_points=Sum('match_result__points')
+        ).order_by('-matches_points')
 
         if tournament_id != 0:
             tournament_users = TournamentUser.objects.filter(
