@@ -19,7 +19,7 @@ class TournamentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     get_league_name.short_description = 'League'
     
     def get_admin_username(self, obj):
-        return obj.admin_tournament.username
+        return obj.admin_tournament.username if obj.admin_tournament else '-'
     get_admin_username.admin_order_field = 'admin_tournament__username'
     get_admin_username.short_description = 'Admin'
 
