@@ -4,12 +4,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-INTERNAL_IPS = [
-    '127.0.0.1',
-    '192.168.20.30',
-    '172.20.10.7',
-]
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
