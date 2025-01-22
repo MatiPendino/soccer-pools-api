@@ -11,6 +11,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://soccerpools.matiaspendino.com', 
+]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 DEBUG = True
 
