@@ -16,11 +16,6 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv
     && ./aws/install \
     && rm -rf awscliv2.zip ./aws
 
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip" \
-    && unzip awscliv2.zip \
-    && ./aws/install \
-    && rm -rf awscliv2.zip ./aws
-
 COPY requirements.txt /app/
 
 RUN pip install --upgrade pip && pip install -r requirements.txt
