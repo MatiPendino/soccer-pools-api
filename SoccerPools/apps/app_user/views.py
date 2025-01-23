@@ -1,5 +1,6 @@
 import requests
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
+from django.shortcuts import render
 from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
@@ -148,3 +149,20 @@ class GoogleLoginView(APIView):
         }
 
         return Response(tokens)
+    
+
+def remove_user(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password) 
+
+        if user:
+            user.is_active = False
+            user.save()
+            return render(request, 'app_user/remove_user.html', {'message': 'User removed successfully'})
+        else:
+            return render(request, 'app_user/remove_user.html', {'message': 'Credentials are not correct'})
+
+    return render(request, 'app_user/remove_user.html')

@@ -13,6 +13,7 @@ SECRET_KEY = config('SECRET_KEY')
 
 CSRF_TRUSTED_ORIGINS = [
     'https://soccerpools.matiaspendino.com', 
+    'http://127.0.0.1:8000',
 ]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
