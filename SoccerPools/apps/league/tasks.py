@@ -5,7 +5,8 @@ from .models import Round
 @shared_task
 def check_upcoming_rounds():
     """
-    Check if any start_date is within 20 minutes but hasn't started yet and sets its state to pending
+        Check if any round start_date is within 20 minutes but hasn't started yet and 
+        sets its state to pending
     """
     start_time = now() + timedelta(minutes=20)
     rounds = Round.objects.filter(start_date__gte=now(), start_date__lte=start_time)
