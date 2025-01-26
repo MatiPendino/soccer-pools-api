@@ -21,4 +21,4 @@ class RoundSerializer(serializers.ModelSerializer):
 class TeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
-        fields = ('name', 'badge', 'slug')
+        fields = ('name', 'badge', 'slug', 'acronym')
