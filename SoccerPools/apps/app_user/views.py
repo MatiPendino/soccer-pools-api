@@ -62,28 +62,26 @@ class UserView(APIView):
     
 
 class UserDestroyApiView(APIView):
-    '''
+    """
         The User, and all their bets and match results will be logically removed
-    '''
+    """
     def delete(self, request, *args, **kwargs):
         user = request.user
         if user:
-            with transaction.atomic():
-                user.is_active = False
-                user.save()
-
-                bets = Bet.objects.filter(user=user, state=True)
-                match_results = MatchResult.objects.filter(bet__in=bets, state=True)
-                match_results.update(state=False)
-                bets.update(state=False)
-
-                return Response({'success': 'User removed successfully'}, status=status.HTTP_204_NO_CONTENT)
+            user.remove_user()
+            return Response({'success': 'User removed successfully'}, status=status.HTTP_204_NO_CONTENT)
         return Response({'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UserInLeague(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
+        """
+            If the user is in at least one league returns True, otherwise False
+
+            in_league: Bool
+        """
         if Bet.objects.filter(user=request.user, state=True).exists():
             return Response({'in_league': True})
         
@@ -94,6 +92,11 @@ class LeagueUser(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
+        """
+            Gets the League based on the User
+
+            TODO update once multileague feature created
+        """
         try:
             bet = Bet.objects.filter(user=request.user, state=True).first()
             league = League.objects.filter(round__bet=bet, state=True).distinct().first()
@@ -157,10 +160,8 @@ def remove_user(request):
         password = request.POST.get('password')
 
         user = authenticate(request, username=username, password=password) 
-
         if user:
-            user.is_active = False
-            user.save()
+            user.remove_user()
             return render(request, 'app_user/remove_user.html', {'message': 'User removed successfully'})
         else:
             return render(request, 'app_user/remove_user.html', {'message': 'Credentials are not correct'})

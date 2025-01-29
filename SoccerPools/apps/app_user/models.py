@@ -1,7 +1,8 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.base_user import BaseUserManager
 from django.core.validators import MinValueValidator
+from django.apps import apps
 from .validations import validate_no_spaces
 
 class AppUserManager(BaseUserManager):
@@ -55,3 +56,18 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+    
+    def remove_user(self):
+        """
+            Removes logically the User and its Bets and MatchResults
+        """
+        Bet = apps.get_model('bet', 'Bet')
+        MatchResult = apps.get_model('match', 'MatchResult')
+        with transaction.atomic():
+            self.is_active = False
+            self.save()
+
+            bets = Bet.objects.filter(user=self, state=True)
+            match_results = MatchResult.objects.filter(bet__in=bets, state=True)
+            match_results.update(state=False)
+            bets.update(state=False)
