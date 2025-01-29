@@ -114,9 +114,58 @@ class UserViewTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class UserDestroyTest(APITestCase):
+class UserInLeagueTest(APITestCase):
     def setUp(self):
         self.user = AppUserFactory()
+        self.league = LeagueFactory()
+        self.round = RoundFactory(league=self.league)
+        self.team_1 = TeamFactory(league=self.league, name='Rosario Central')
+        self.team_2 = TeamFactory(league=self.league, name='NOB')
+        self.url = f'/api/user/user_in_league/'
+
+    def test_user_in_league(self):
+        self.bet = BetFactory(round=self.round, user=self.user)
+        self.match = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data.get('in_league'))
+
+    def test_user_not_in_league(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data.get('in_league'))
+
+
+class LeagueUserTest(APITestCase):
+    def setUp(self):
+        self.user = AppUserFactory()
+        self.league = LeagueFactory(name='Liga Argentina')
+        self.round = RoundFactory(league=self.league)
+        self.team_1 = TeamFactory(league=self.league, name='Rosario Central')
+        self.team_2 = TeamFactory(league=self.league, name='NOB')
+        self.url = f'/api/user/user_league/'
+
+    def test_user_league_bets(self):
+        self.bet = BetFactory(user=self.user, round=self.round)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('name'), self.league.name)
+
+
+class RemoveUserSetUp(APITestCase):
+    def setUp(self):
+        self.username = 'mati'
+        self.password = '123456798'
+        self.user = User.objects.create_user(
+            username=self.username,
+            email='email@gmail.com',
+            name='Mati',
+            last_name='Pendino',
+            password=self.password
+        )
         self.league = LeagueFactory()
         self.round = RoundFactory(league=self.league)
         self.team_1 = TeamFactory(name='Team 1', league=self.league)
@@ -128,12 +177,13 @@ class UserDestroyTest(APITestCase):
         self.bet = BetFactory(user=self.user, round=self.round)
         self.match_result_1 = MatchResultFactory(bet=self.bet, match=self.match_1)
         self.match_result_2 = MatchResultFactory(bet=self.bet, match=self.match_2)
-        self.url = '/api/user/user_destroy/'
 
+class UserDestroyTest(RemoveUserSetUp):
     def test_destroy_user(self):
         """
             Test that the user and its corresponding MatchResults and Bets are removed successfully
         """
+        self.url = '/api/user/user_destroy/'
         self.client.force_authenticate(user=self.user)
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -142,3 +192,17 @@ class UserDestroyTest(APITestCase):
         self.assertEqual(Bet.objects.filter(state=True).count(), 0)
 
 
+class RemoveUserTest(RemoveUserSetUp):
+    def test_remove_user(self):
+        """
+            Test that the user and its corresponding MatchResults and Bets are removed successfully
+        """
+        self.url = '/api/user/remove_user/'
+        data = {
+            'username': self.username,
+            'password': self.password
+        }
+        response = self.client.post(self.url, data)
+        self.assertEqual(MatchResult.objects.filter(state=True).count(), 0)
+        self.assertEqual(Bet.objects.filter(state=True).count(), 0)
+        self.assertEqual(Bet.objects.filter(state=True).count(), 0)
