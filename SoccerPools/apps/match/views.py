@@ -1,7 +1,7 @@
 from rest_framework import status, permissions, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.shortcuts import get_list_or_404
+from django.shortcuts import get_list_or_404, get_object_or_404
 from .serializers import MatchResultSerializer
 from .models import MatchResult, Match
 
@@ -18,14 +18,6 @@ class MatchResultsListCreateApiView(generics.ListCreateAPIView):
             state=True
         )
         return match_results
-    
-    def post(self, request):
-        serializer = MatchResultSerializer(data=request.data, many=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 class MatchResultsUpdateApiView(APIView):
@@ -56,12 +48,13 @@ class MatchResultOriginalRetrieveApiView(APIView):
     permission_class = (permissions.IsAuthenticated,)
 
     def get(self, request, match_id):
-        match = Match.objects.get(id=match_id)
+        match = get_object_or_404(Match, id=match_id)
         original_match_result = MatchResult.objects.filter( 
             state=True, 
             match=match,
             original_result=True
         ).first()
-        serializer = MatchResultSerializer(original_match_result)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if original_match_result:
+            serializer = MatchResultSerializer(original_match_result)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(None, status=status.HTTP_204_NO_CONTENT)

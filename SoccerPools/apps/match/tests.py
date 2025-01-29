@@ -1,9 +1,10 @@
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
 from apps.bet.factories import BetFactory
 from apps.match.models import MatchResult
+from apps.match.serializers import MatchResultSerializer
 from .factories import MatchResultFactory, MatchFactory
 
 User = get_user_model()
@@ -16,7 +17,8 @@ class MatchResultsListCreateTest(APITestCase):
             name='TestName',
             last_name='TestSurname'
         )
-        self.client.login(username='testuser', password='testpassword')
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
 
         self.league = LeagueFactory()
         self.round = RoundFactory(league=self.league)
@@ -37,19 +39,6 @@ class MatchResultsListCreateTest(APITestCase):
 
         self.assertEqual(len(response.data), 2)
         self.assertEqual(response.data[0]['id'], self.match_result_1.id)
-
-    def test_create_match_results(self):
-        """Test that a POST request creates new match results"""
-        data = [
-            {'goals_team_1': 3, 'goals_team_2': 2, 'match': self.match_1.id},
-            {'goals_team_1': 0, 'goals_team_2': 1, 'match': self.match_2.id}
-        ]
-
-        response = self.client.post(self.url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        self.assertEqual(len(response.data), len(data))
-        self.assertEqual(MatchResult.objects.count(), 4) # Two created in setUp, two new
 
 
 class MatchResultsUpdateTest(APITestCase):
@@ -105,3 +94,45 @@ class MatchResultsUpdateTest(APITestCase):
             self.match_result_2.goals_team_2, 
             matchResults[1].get('goals_team_2')
         )
+
+
+class MatchResultOriginalTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='testuser', 
+            password='testpassword',
+            email='test@gmail.com',
+            name='TestName',
+            last_name='TestSurname'
+        )
+        self.client.login(username='testuser', password='testpassword')
+
+        self.league = LeagueFactory()
+        self.round = RoundFactory(league=self.league)
+        self.team_1 = TeamFactory(league=self.league, name='Rosario Central')
+        self.team_2 = TeamFactory(league=self.league, name='NOB')
+        self.bet = BetFactory(round=self.round, user=self.user)
+        self.match = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
+        self.match_result_user = MatchResultFactory(bet=self.bet, match=self.match)
+        self.match_result_original = MatchResult.objects.create(
+            original_result=True,
+            match=self.match
+        )
+        self.url = f'/api/matches/original_match_result/{self.match.id}/'
+
+    def test_get_original_match_result(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, MatchResultSerializer(self.match_result_original).data)
+
+    def test_get_no_existing_original_match_result(self):
+        self.match_result_original.original_result = False
+        self.match_result_original.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.data, None)
+
+    def test_get_no_existing_match_id(self):
+        response = self.client.get('/api/matches/original_match_result/50/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
