@@ -15,9 +15,9 @@ class BetResultsApiView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = BetSerializer
 
-    def get_queryset(self):
-        round_slug = self.request.query_params.get('round_slug')
-        tournament_id = int(self.request.query_params.get('tournament_id'))
+    def get_queryset(self,):
+        round_slug = self.kwargs.get('round_slug')
+        tournament_id = self.kwargs.get('tournament_id')
 
         bets = Bet.objects.filter(
             round__slug=round_slug, 
@@ -43,8 +43,7 @@ class LeagueBetsMatchResultsCreateApiView(APIView):
         Creates Bet and MatchResult instances for the League selected by the user
 
         Payload:
-        league_id -> Integer
-        user_id -> Integer
+        league_slug -> Slug
 
         Response:
         league (String): Name of the league.
