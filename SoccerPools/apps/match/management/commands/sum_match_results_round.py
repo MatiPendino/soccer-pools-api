@@ -15,7 +15,8 @@ class Command(BaseCommand):
         round = get_object_or_404(Round, state=True, id=round_id)
         matches = Match.objects.filter(
             state=True,
-            round=round
+            round=round,
+            match_state=Match.PENDING_MATCH,
         )
         match_results_count = 0
 
@@ -41,6 +42,9 @@ class Command(BaseCommand):
                         original_goals_team_2=original_match_result.goals_team_2
                     )
                     match_result.save()
+
+                match_i.match_state = Match.FINALIZED_MATCH
+                match_i.save()
 
         self.stdout.write(
             self.style.SUCCESS('Successfully updated "%s" match results' % match_results_count)

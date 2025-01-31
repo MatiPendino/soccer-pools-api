@@ -18,3 +18,4 @@ class MatchResultFactory(factory.django.DjangoModelFactory):
 
     bet = factory.SubFactory(BetFactory)
     match = factory.SubFactory(MatchFactory)
+    points = 0

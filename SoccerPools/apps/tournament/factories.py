@@ -18,3 +18,4 @@ class TournamentUserFactory(factory.django.DjangoModelFactory):
 
     tournament = factory.SubFactory(Tournament)
     user = factory.SubFactory(AppUserFactory)
+    tournament_user_state = TournamentUser.NOT_SENT
