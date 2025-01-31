@@ -13,19 +13,6 @@ class LeagueRetrieveApiView(generics.RetrieveAPIView):
     queryset = League.objects.filter(state=True)
 
 
-class NextRoundsListApiView(generics.ListAPIView):
-    serializer_class = RoundSerializer
-    queryset = Round.objects.filter(state=True, round_state=Round.NOT_STARTED_ROUND)
-
-class CurrentRoundsListApiView(generics.ListAPIView):
-    serializer_class = RoundSerializer
-    queryset = Round.objects.filter(state=True, round_state=Round.PENDING_ROUND)
-
-class ExpiredRoundsListApiView(generics.ListAPIView):
-    serializer_class = RoundSerializer
-    queryset = Round.objects.filter(state=True, round_state=Round.FINALIZED_ROUND)
-
-
 class RoundListApiView(generics.ListAPIView):
     serializer_class = RoundSerializer
 
