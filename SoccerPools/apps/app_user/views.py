@@ -124,8 +124,8 @@ class GoogleLoginView(APIView):
 
         user_info = user_info_response.json()
         email = user_info.get("email")
-        first_name = user_info.get("given_name")
-        last_name = user_info.get("family_name")
+        first_name = user_info.get("given_name", '')
+        last_name = user_info.get("family_name", '')
         full_name = user_info.get("name")
         profile_pic = user_info.get('picture')
 
