@@ -15,6 +15,7 @@ class RoundFactory(factory.django.DjangoModelFactory):
     name = factory.Faker('word')
     number_round = factory.Faker('random_int', min=0, max=100)
     league = factory.SubFactory(LeagueFactory)
+    is_general_round = False
 
 
 class TeamFactory(factory.django.DjangoModelFactory):
