@@ -2,7 +2,6 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db import transaction
-from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from apps.league.models import Round, League
 from apps.match.models import Match, MatchResult
@@ -18,13 +17,7 @@ class BetResultsApiView(generics.ListAPIView):
     def get_queryset(self,):
         round_slug = self.kwargs.get('round_slug')
         tournament_id = self.kwargs.get('tournament_id')
-
-        bets = Bet.objects.filter(
-            round__slug=round_slug, 
-            state=True
-        ).annotate(
-            matches_points=Sum('match_result__points')
-        ).order_by('-matches_points')
+        bets = Bet.objects.with_matches_points(round_slug=round_slug)
 
         if tournament_id != 0:
             tournament_users = TournamentUser.objects.filter(

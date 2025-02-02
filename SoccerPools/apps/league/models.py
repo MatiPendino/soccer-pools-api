@@ -36,6 +36,7 @@ class Round(BaseModel):
     price_bet = models.DecimalField('Price of the bet', max_digits=10, decimal_places=2,  help_text='This is the amount which will be added to the pool', default=0)
     fee_bet = models.DecimalField('Fee of the bet', max_digits=7, decimal_places=2, help_text='This is the amount for the platform', default=0)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
+    is_general_round = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.name} - {self.league}'

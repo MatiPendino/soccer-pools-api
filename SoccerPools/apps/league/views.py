@@ -17,10 +17,22 @@ class RoundListApiView(generics.ListAPIView):
     serializer_class = RoundSerializer
 
     def get_queryset(self):
+        """
+            Returns all the rounds for the specified league_id
+            If receive the not_general_round query param, exclude General Round
+        """
+        league_id = self.kwargs.get('pk')
+        not_general_round = self.request.query_params.get('not_general_round')
         rounds = Round.objects.filter(
-            league__id=self.kwargs['pk'], 
+            league__id=league_id, 
             state=True
         ).order_by('number_round')
+
+        if not_general_round != 'undefined':
+            rounds = rounds.filter(
+                is_general_round=False
+            )
+
         return rounds
 
 

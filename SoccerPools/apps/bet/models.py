@@ -2,7 +2,7 @@ from django.db import models
 from apps.base.models import BaseModel
 from apps.app_user.models import AppUser
 from apps.league.models import Round
-
+from .managers import BetManager
 
 class Bet(BaseModel):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
@@ -10,10 +10,23 @@ class Bet(BaseModel):
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
     winner = models.BooleanField(default=False)
 
+    objects = BetManager()
+
     @property
     def points(self):
-        match_results = self.match_result.prefetch_related()
-        match_points = sum([match_result.points for match_result in match_results])
+        if self.round.is_general_round:
+            match_points = Bet.objects.filter(
+                state=True,
+                user=self.user,
+                round__league=self.round.league,
+                round__is_general_round=False
+            ).aggregate(total_points=models.Sum(
+                'match_result__points'
+            ))['total_points'] or 0
+        else:
+            match_points = self.match_result.aggregate(
+                total_points=models.Sum('points')
+            )['total_points'] or 0
 
         return match_points
 
