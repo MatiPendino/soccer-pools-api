@@ -8,8 +8,8 @@ class MatchResources(resources.ModelResource):
         model = Match
 
 class MatchAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    search_fields = ('team_1__name', 'team_2__name', 'round__name', 'round__league__name')
-    list_display = ('get_round_name', 'get_team_1', 'get_team_2', 'get_league_name')
+    search_fields = ('id', 'team_1__name', 'team_2__name', 'round__name', 'round__league__name')
+    list_display = ('id', 'get_round_name', 'get_team_1', 'get_team_2', 'get_league_name')
     resource_class = MatchResources
 
 
@@ -42,7 +42,7 @@ class MatchResultResources(resources.ModelResource):
 
 class MatchResultAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     search_fields = ('match__team_1__name', 'match__team_2__name', 'match__round__name', 'match__round__league__name')
-    list_display = ('get_round_name', 'get_team_1', 'goals_team_1', 'get_team_2', 'goals_team_2', 'get_league_name', 'original_result')
+    list_display = ('get_round_name', 'get_user_username', 'get_team_1', 'goals_team_1', 'get_team_2', 'goals_team_2', 'original_result', 'get_league_name',)
     resource_class = MatchResultResources
 
     def get_team_1(self, obj):
@@ -64,5 +64,10 @@ class MatchResultAdmin(ImportExportModelAdmin, admin.ModelAdmin):
         return obj.match.round.league.name
     get_league_name.admin_order_field = 'match__round__league__name'
     get_league_name.short_description = 'League'
+
+    def get_user_username(self, obj):
+        return obj.bet.user.username if obj.bet else 'admin'
+    get_user_username.admin_order_field = 'bet__user__username'
+    get_user_username.short_description = 'User'
 
 admin.site.register(MatchResult, MatchResultAdmin)

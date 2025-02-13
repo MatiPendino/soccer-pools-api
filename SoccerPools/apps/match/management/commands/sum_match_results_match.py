@@ -5,7 +5,10 @@ from apps.match.utils import get_match_result_points
 from apps.match.models import MatchResult, Match
 
 class Command(BaseCommand):
-    """Sums the points for the match results based on the match"""
+    """
+        Sums the points for the match results based on the match_id
+        Also updates the match_state to FINALIZED
+    """
     def add_arguments(self, parser):
         parser.add_argument('match_id', type=int)
     
