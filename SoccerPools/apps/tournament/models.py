@@ -4,9 +4,12 @@ from apps.base.models import BaseModel
 from apps.league.models import League
 
 class Tournament(BaseModel):
+    LOGO_FOLDER_NAME = 'tournament'
+    LOGO_DEFAULT_FILE_NAME = 'default-tournament-logo.png'
+    
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
-    logo = models.ImageField(upload_to='tournament', default='default-tournament-logo.png')
+    logo = models.ImageField(upload_to=LOGO_FOLDER_NAME, default=LOGO_DEFAULT_FILE_NAME, blank=True, null=True)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     admin_tournament = models.ForeignKey(AppUser, on_delete=models.SET_NULL, null=True, blank=True)
 

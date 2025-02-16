@@ -1,3 +1,4 @@
+import copy
 from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,6 +8,7 @@ from django.db import transaction
 from django.db.models import Q
 from .models import Tournament, TournamentUser
 from .serializers import TournamentSerializer, TournamentUserSerializer
+from .utils import generate_default_logo
 
 class TournamentViewSet(viewsets.ModelViewSet):
     serializer_class = TournamentSerializer
@@ -17,14 +19,22 @@ class TournamentViewSet(viewsets.ModelViewSet):
         try:
             with transaction.atomic(): 
                 user = request.user
-                data = request.data
+                data = copy.copy(request.data)
                 data['admin_tournament'] = user.id
                 data['league'] = int(data['league'])
+                # If the user does not select a logo, the default logo will be selected
+                # In case of an error the logo will be None
+                if data['logo'] == 'null':
+                    try:
+                        default_logo = generate_default_logo()
+                        data['logo'] = default_logo
+                    except Exception as e:
+                        data['logo'] = None
                 serializer = self.get_serializer(data=data)
                 serializer.is_valid(raise_exception=True)
                 self.perform_create(serializer)
 
-                tournament = Tournament.objects.all().last()
+                tournament = Tournament.objects.filter(admin_tournament=user).last()
                 TournamentUser.objects.create(
                     tournament=tournament,
                     user=user,
