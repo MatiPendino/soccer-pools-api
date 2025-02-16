@@ -16,7 +16,7 @@ class MatchResultsListCreateApiView(generics.ListCreateAPIView):
             bet__round__id=round_id,
             bet__user=self.request.user,
             state=True
-        )
+        ).order_by('match__start_date')
         return match_results
     
 
