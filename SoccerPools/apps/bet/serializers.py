@@ -1,9 +1,9 @@
 from rest_framework import serializers
-from .models import Bet
+from .models import BetRound
 
-class BetSerializer(serializers.ModelSerializer):
+class BetRoundSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Bet
+        model = BetRound
         fields = ('id', 'user', 'round', 'operation_code')
 
     def to_representation(self, instance):
@@ -17,7 +17,7 @@ class BetSerializer(serializers.ModelSerializer):
         }
     
 
-class BetCreateSerializer(serializers.ModelSerializer):
+class BetRoundCreateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Bet
+        model = BetRound
         fields = ('user', 'round')

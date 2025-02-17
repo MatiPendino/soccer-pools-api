@@ -1,12 +1,12 @@
 import factory
 from apps.app_user.factories import AppUserFactory
 from apps.league.factories import RoundFactory
-from .models import Bet
+from .models import BetRound
 from .utils import generate_unique_code
 
-class BetFactory(factory.django.DjangoModelFactory):
+class BetRoundFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = Bet
+        model = BetRound
 
     user = factory.SubFactory(AppUserFactory)
     operation_code = generate_unique_code()

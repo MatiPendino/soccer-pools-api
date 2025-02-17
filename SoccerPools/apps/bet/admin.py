@@ -1,16 +1,16 @@
 from django.contrib import admin
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
-from .models import Bet
+from .models import BetRound
 
-class BetResources(resources.ModelResource):
+class BetRoundResources(resources.ModelResource):
     class Meta:
-        model = Bet
+        model = BetRound
 
-class BetAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+class BetRoundAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     search_fields = ('operation_code', 'user__username', 'round__name')
     list_display = ('get_user', 'operation_code', 'get_round', 'points', 'winner')
-    resource_class = BetResources
+    resource_class = BetRoundResources
 
     def get_user(self, obj):
         return obj.user
@@ -23,4 +23,4 @@ class BetAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     get_round.short_description = 'Round'
 
 
-admin.site.register(Bet, BetAdmin)
+admin.site.register(BetRound, BetRoundAdmin)

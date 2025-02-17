@@ -2,7 +2,7 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
-from apps.bet.factories import BetFactory
+from apps.bet.factories import BetRoundFactory
 from apps.match.models import MatchResult
 from apps.match.serializers import MatchResultSerializer
 from .factories import MatchResultFactory, MatchFactory
@@ -25,16 +25,16 @@ class MatchResultsListCreateTest(APITestCase):
         self.team_1 = TeamFactory(league=self.league, name='Rosario Central')
         self.team_2 = TeamFactory(league=self.league, name='NOB')
         self.team_3 = TeamFactory(league=self.league, name='River Plate')
-        self.bet = BetFactory(round=self.round, user=self.user)
+        self.bet_round = BetRoundFactory(round=self.round, user=self.user)
         self.match_1 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
         self.match_2 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_3)
-        self.match_result_1 = MatchResultFactory(bet=self.bet, match=self.match_1)
-        self.match_result_2 = MatchResultFactory(bet=self.bet, match=self.match_2)
+        self.match_result_1 = MatchResultFactory(bet_round=self.bet_round, match=self.match_1)
+        self.match_result_2 = MatchResultFactory(bet_round=self.bet_round, match=self.match_2)
         self.url = '/api/matches/match_results/'
 
     def test_get_match_results(self):
         """Test that the GET request retrieves match results filtered by round_id"""
-        response = self.client.get(self.url, {'round_id': self.bet.round.id})
+        response = self.client.get(self.url, {'round_id': self.bet_round.round.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(len(response.data), 2)
@@ -57,11 +57,11 @@ class MatchResultsUpdateTest(APITestCase):
         self.team_1 = TeamFactory(league=self.league, name='Rosario Central')
         self.team_2 = TeamFactory(league=self.league, name='NOB')
         self.team_3 = TeamFactory(league=self.league, name='River Plate')
-        self.bet = BetFactory(round=self.round, user=self.user)
+        self.bet_round = BetRoundFactory(round=self.round, user=self.user)
         self.match_1 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
         self.match_2 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_3)
-        self.match_result_1 = MatchResultFactory(bet=self.bet, match=self.match_1)
-        self.match_result_2 = MatchResultFactory(bet=self.bet, match=self.match_2)
+        self.match_result_1 = MatchResultFactory(bet_round=self.bet_round, match=self.match_1)
+        self.match_result_2 = MatchResultFactory(bet_round=self.bet_round, match=self.match_2)
         self.url = '/api/matches/match_results_update/'
 
     def test_updated_results(self):
@@ -111,9 +111,9 @@ class MatchResultOriginalTest(APITestCase):
         self.round = RoundFactory(league=self.league)
         self.team_1 = TeamFactory(league=self.league, name='Rosario Central')
         self.team_2 = TeamFactory(league=self.league, name='NOB')
-        self.bet = BetFactory(round=self.round, user=self.user)
+        self.bet_round = BetRoundFactory(round=self.round, user=self.user)
         self.match = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
-        self.match_result_user = MatchResultFactory(bet=self.bet, match=self.match)
+        self.match_result_user = MatchResultFactory(bet_round=self.bet_round, match=self.match)
         self.match_result_original = MatchResult.objects.create(
             original_result=True,
             match=self.match

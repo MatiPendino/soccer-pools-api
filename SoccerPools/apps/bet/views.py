@@ -7,17 +7,17 @@ from apps.league.models import Round, League
 from apps.match.models import Match, MatchResult
 from apps.app_user.models import AppUser
 from apps.tournament.models import TournamentUser
-from .serializers import BetSerializer, BetCreateSerializer
-from .models import Bet
+from .serializers import BetRoundSerializer, BetRoundCreateSerializer
+from .models import BetRound
 
-class BetResultsApiView(generics.ListAPIView):
+class BetRoundResultsApiView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = BetSerializer
+    serializer_class = BetRoundSerializer
 
     def get_queryset(self,):
         round_slug = self.kwargs.get('round_slug')
         tournament_id = self.kwargs.get('tournament_id')
-        bets = Bet.objects.with_matches_points(round_slug=round_slug)
+        bet_rounds = BetRound.objects.with_matches_points(round_slug=round_slug)
 
         if tournament_id != 0:
             tournament_users = TournamentUser.objects.filter(
@@ -26,12 +26,12 @@ class BetResultsApiView(generics.ListAPIView):
             )
             users = [tournament_user.user for tournament_user in tournament_users]
 
-            bets = bets.filter(user__in=users)
+            bet_rounds = bet_rounds.filter(user__in=users)
 
-        return bets
+        return bet_rounds
 
 
-class LeagueBetsMatchResultsCreateApiView(APIView):
+class LeagueBetRoundsMatchResultsCreateApiView(APIView):
     """
         Creates Bet and MatchResult instances for the League selected by the user
 
@@ -52,20 +52,20 @@ class LeagueBetsMatchResultsCreateApiView(APIView):
 
         with transaction.atomic():
             # Creates bets for all the league rounds
-            bets = [Bet(round=league_round, user=user) for league_round in rounds]
-            Bet.objects.bulk_create(bets)
+            bet_rounds = [BetRound(round=league_round, user=user) for league_round in rounds]
+            BetRound.objects.bulk_create(bet_rounds)
 
             # Creates match results for all the matches in all the bets
-            for bet in bets:
-                matches = Match.objects.filter(round=bet.round, state=True)
-                match_results = [MatchResult(match=soccer_match, bet=bet) for soccer_match in matches]
+            for bet_round in bet_rounds:
+                matches = Match.objects.filter(round=bet_round.round, state=True)
+                match_results = [MatchResult(match=soccer_match, bet_round=bet_round) for soccer_match in matches]
                 MatchResult.objects.bulk_create(match_results)
 
         response_data = {
             'league': league.name,
             'user': user.username,
             'bets': [
-                {'bet_id': bet.id, 'round_id': bet.round.id} for bet in bets
+                {'bet_id': bet_round.id, 'round_id': bet_round.round.id} for bet_round in bet_rounds
             ]
         }
 

@@ -13,8 +13,8 @@ class MatchResultsListCreateApiView(generics.ListCreateAPIView):
     def get_queryset(self):
         round_id = self.request.query_params.get('round_id')
         match_results = MatchResult.objects.filter(
-            bet__round__id=round_id,
-            bet__user=self.request.user,
+            bet_round__round__id=round_id,
+            bet_round__user=self.request.user,
             state=True
         ).order_by('match__start_date')
         return match_results

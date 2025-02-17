@@ -3,11 +3,11 @@ from django.db.models import (
 )
 from django.db.models.functions import Coalesce
 
-class BetManager(Manager):
+class BetRoundManager(Manager):
     def with_matches_points(self, round_slug):
         """
-            Filters the bets based on the received round_slug, and makes an annotation 
-            for the bet points
+            Filters the bet rounds based on the received round_slug, and makes an annotation 
+            for the bet round points
 
             Returns the queryset ordered by matches_points desc
         """
@@ -19,11 +19,11 @@ class BetManager(Manager):
                 # If round.is_general_round == True, sum points from all bets in the same league
                 Coalesce(
                     Sum(
-                        'user__bet__match_result__points',
+                        'user__bet_rounds__match_results__points',
                         filter=(
                             Q(round__is_general_round=True) &
-                            Q(user__bet__state=True) &
-                            Q(user__bet__round__league=F('round__league'))
+                            Q(user__bet_rounds__state=True) &
+                            Q(user__bet_rounds__round__league=F('round__league'))
                         )
                     ), Value(0),
                     output_field=IntegerField()
@@ -31,7 +31,7 @@ class BetManager(Manager):
                 # Otherwise, sum points from match results directly related to the instance
                 Coalesce(
                     Sum(
-                        'match_result__points',
+                        'match_results__points',
                         filter=(
                             Q(round__is_general_round=False) 
                         )

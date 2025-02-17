@@ -1,6 +1,6 @@
 import factory
 from apps.league.factories import TeamFactory, RoundFactory
-from apps.bet.factories import BetFactory
+from apps.bet.factories import BetRoundFactory
 from apps.match.models import Match, MatchResult
 
 class MatchFactory(factory.django.DjangoModelFactory):
@@ -16,6 +16,6 @@ class MatchResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = MatchResult
 
-    bet = factory.SubFactory(BetFactory)
+    bet_round = factory.SubFactory(BetRoundFactory)
     match = factory.SubFactory(MatchFactory)
     points = 0

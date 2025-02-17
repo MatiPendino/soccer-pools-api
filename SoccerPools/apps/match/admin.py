@@ -66,8 +66,8 @@ class MatchResultAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     get_league_name.short_description = 'League'
 
     def get_user_username(self, obj):
-        return obj.bet.user.username if obj.bet else 'admin'
-    get_user_username.admin_order_field = 'bet__user__username'
+        return obj.bet_round.user.username if obj.bet_round else 'admin'
+    get_user_username.admin_order_field = 'bet_round__user__username'
     get_user_username.short_description = 'User'
 
 admin.site.register(MatchResult, MatchResultAdmin)

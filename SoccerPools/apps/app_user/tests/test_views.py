@@ -5,10 +5,10 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 from apps.app_user.factories import AppUserFactory
 from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
-from apps.bet.factories import BetFactory
+from apps.bet.factories import BetRoundFactory
 from apps.match.factories import MatchFactory, MatchResultFactory
 from apps.match.models import MatchResult
-from apps.bet.models import Bet
+from apps.bet.models import BetRound
 
 User = get_user_model()
 class UserRegisterViewTest(TestCase):
@@ -124,7 +124,7 @@ class UserInLeagueTest(APITestCase):
         self.url = f'/api/user/user_in_league/'
 
     def test_user_in_league(self):
-        self.bet = BetFactory(round=self.round, user=self.user)
+        self.bet_round = BetRoundFactory(round=self.round, user=self.user)
         self.match = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
@@ -148,7 +148,7 @@ class LeagueUserTest(APITestCase):
         self.url = f'/api/user/user_league/'
 
     def test_user_league_bets(self):
-        self.bet = BetFactory(user=self.user, round=self.round)
+        self.bet_round = BetRoundFactory(user=self.user, round=self.round)
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -174,9 +174,9 @@ class RemoveUserSetUp(APITestCase):
         self.team_4 = TeamFactory(name='Team 4', league=self.league)
         self.match_1 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
         self.match_2 = MatchFactory(round=self.round, team_1=self.team_3, team_2=self.team_4)
-        self.bet = BetFactory(user=self.user, round=self.round)
-        self.match_result_1 = MatchResultFactory(bet=self.bet, match=self.match_1)
-        self.match_result_2 = MatchResultFactory(bet=self.bet, match=self.match_2)
+        self.bet_round = BetRoundFactory(user=self.user, round=self.round)
+        self.match_result_1 = MatchResultFactory(bet_round=self.bet_round, match=self.match_1)
+        self.match_result_2 = MatchResultFactory(bet_round=self.bet_round, match=self.match_2)
 
 class UserDestroyTest(RemoveUserSetUp):
     def test_destroy_user(self):
@@ -188,8 +188,8 @@ class UserDestroyTest(RemoveUserSetUp):
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(MatchResult.objects.filter(state=True).count(), 0)
-        self.assertEqual(Bet.objects.filter(state=True).count(), 0)
-        self.assertEqual(Bet.objects.filter(state=True).count(), 0)
+        self.assertEqual(BetRound.objects.filter(state=True).count(), 0)
+        self.assertEqual(BetRound.objects.filter(state=True).count(), 0)
 
 
 class RemoveUserTest(RemoveUserSetUp):
@@ -204,5 +204,5 @@ class RemoveUserTest(RemoveUserSetUp):
         }
         response = self.client.post(self.url, data)
         self.assertEqual(MatchResult.objects.filter(state=True).count(), 0)
-        self.assertEqual(Bet.objects.filter(state=True).count(), 0)
-        self.assertEqual(Bet.objects.filter(state=True).count(), 0)
+        self.assertEqual(BetRound.objects.filter(state=True).count(), 0)
+        self.assertEqual(BetRound.objects.filter(state=True).count(), 0)

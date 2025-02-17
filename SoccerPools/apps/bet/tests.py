@@ -5,12 +5,12 @@ from apps.app_user.factories import AppUserFactory
 from apps.match.factories import MatchFactory, MatchResultFactory
 from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
 from apps.tournament.factories import TournamentFactory, TournamentUserFactory
-from apps.bet.factories import BetFactory
-from apps.bet.models import Bet
+from apps.bet.factories import BetRoundFactory
+from apps.bet.models import BetRound
 from apps.match.models import MatchResult
 from apps.tournament.models import TournamentUser
 
-class BetResultsTest(APITestCase):
+class BetRoundResultsTest(APITestCase):
     def setUp(self):
         self.user_1 = AppUserFactory(email='user1@gmail.com', username='user1')
         self.user_2 = AppUserFactory(email='user2@gmail.com', username='user2')
@@ -30,24 +30,24 @@ class BetResultsTest(APITestCase):
         self.match_4 = MatchFactory(round=self.round_2, team_1=self.team_1, team_2=self.team_3)
         self.match_5 = MatchFactory(round=self.round_2, team_1=self.team_2, team_2=self.team_4)
         self.match_6 = MatchFactory(round=self.round_2, team_1=self.team_3, team_2=self.team_6)
-        self.bet_general_user_1 = BetFactory(user=self.user_1, round=self.round_general)
-        self.bet_general_user_2 = BetFactory(user=self.user_2, round=self.round_general)
-        self.bet_1 = BetFactory(user=self.user_1, round=self.round_1)
-        self.bet_2 = BetFactory(user=self.user_2, round=self.round_1)
-        self.bet_3 = BetFactory(user=self.user_2, round=self.round_2)
-        self.bet_4 = BetFactory(user=self.user_2, round=self.round_2)
-        self.match_result_1 = MatchResultFactory(bet=self.bet_1, match=self.match_1, points=1)
-        self.match_result_2 = MatchResultFactory(bet=self.bet_1, match=self.match_2, points=0)
-        self.match_result_3 = MatchResultFactory(bet=self.bet_1, match=self.match_3, points=0)
-        self.match_result_4 = MatchResultFactory(bet=self.bet_2, match=self.match_1, points=0)
-        self.match_result_5 = MatchResultFactory(bet=self.bet_2, match=self.match_2, points=3)
-        self.match_result_6 = MatchResultFactory(bet=self.bet_2, match=self.match_3, points=1)
-        self.match_result_7 = MatchResultFactory(bet=self.bet_3, match=self.match_4, points=1)
-        self.match_result_8 = MatchResultFactory(bet=self.bet_3, match=self.match_5, points=0)
-        self.match_result_9 = MatchResultFactory(bet=self.bet_3, match=self.match_6, points=0)
-        self.match_result_10 = MatchResultFactory(bet=self.bet_4, match=self.match_4, points=0)
-        self.match_result_11 = MatchResultFactory(bet=self.bet_4, match=self.match_5, points=3)
-        self.match_result_12 = MatchResultFactory(bet=self.bet_4, match=self.match_6, points=1)
+        self.bet_general_user_1 = BetRoundFactory(user=self.user_1, round=self.round_general)
+        self.bet_general_user_2 = BetRoundFactory(user=self.user_2, round=self.round_general)
+        self.bet_1 = BetRoundFactory(user=self.user_1, round=self.round_1)
+        self.bet_2 = BetRoundFactory(user=self.user_2, round=self.round_1)
+        self.bet_3 = BetRoundFactory(user=self.user_2, round=self.round_2)
+        self.bet_4 = BetRoundFactory(user=self.user_2, round=self.round_2)
+        self.match_result_1 = MatchResultFactory(bet_round=self.bet_1, match=self.match_1, points=1)
+        self.match_result_2 = MatchResultFactory(bet_round=self.bet_1, match=self.match_2, points=0)
+        self.match_result_3 = MatchResultFactory(bet_round=self.bet_1, match=self.match_3, points=0)
+        self.match_result_4 = MatchResultFactory(bet_round=self.bet_2, match=self.match_1, points=0)
+        self.match_result_5 = MatchResultFactory(bet_round=self.bet_2, match=self.match_2, points=3)
+        self.match_result_6 = MatchResultFactory(bet_round=self.bet_2, match=self.match_3, points=1)
+        self.match_result_7 = MatchResultFactory(bet_round=self.bet_3, match=self.match_4, points=1)
+        self.match_result_8 = MatchResultFactory(bet_round=self.bet_3, match=self.match_5, points=0)
+        self.match_result_9 = MatchResultFactory(bet_round=self.bet_3, match=self.match_6, points=0)
+        self.match_result_10 = MatchResultFactory(bet_round=self.bet_4, match=self.match_4, points=0)
+        self.match_result_11 = MatchResultFactory(bet_round=self.bet_4, match=self.match_5, points=3)
+        self.match_result_12 = MatchResultFactory(bet_round=self.bet_4, match=self.match_6, points=1)
         self.client.force_authenticate(user=self.user_1)
 
     def test_bet_results_no_tournament(self):
@@ -58,7 +58,7 @@ class BetResultsTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data[0].get('points') >= response.data[1].get('points'))
-        self.assertEqual(len(response.data), Bet.objects.filter(round__slug=round_slug).count())
+        self.assertEqual(len(response.data), BetRound.objects.filter(round__slug=round_slug).count())
 
     def test_bet_results_tournament(self):
         """
@@ -96,18 +96,18 @@ class BetResultsTest(APITestCase):
         self.assertTrue(response.data[0].get('points') >= response.data[1].get('points'))
         self.assertEqual(
             len(response.data), 
-            Bet.objects.filter(round__is_general_round=True).count()
+            BetRound.objects.filter(round__is_general_round=True).count()
         )
 
         # Calculate the total points of each bet in memory and test that matches the points
         # retrived from the response
         for i, bet in enumerate(response.data):
-            total_points = Bet.objects.filter(
+            total_points = BetRound.objects.filter(
                 state=True, 
                 round__is_general_round=False,
                 user__username=bet.get('username')
             ).aggregate(
-                points=Sum('match_result__points')
+                points=Sum('match_results__points')
             )['points'] or 0
 
             self.assertEqual(response.data[i].get('points'), total_points)
@@ -145,5 +145,5 @@ class LeagueBetsMatchResultsCreateTest(APITestCase):
         response = self.client.post(self.url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Bet.objects.count(), 2)
+        self.assertEqual(BetRound.objects.count(), 2)
         self.assertEqual(MatchResult.objects.count(), 6)

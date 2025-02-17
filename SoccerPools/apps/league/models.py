@@ -41,9 +41,6 @@ class Round(BaseModel):
     def __str__(self):
         return f'{self.name} - {self.league}'
     
-    def get_number_bets(self):
-        return self.bet_set.count()
-    
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
         super().save(*args, **kwargs)

@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.files.base import ContentFile
 from django.utils.text import slugify
-from apps.bet.models import Bet
+from apps.bet.models import BetRound
 from apps.league.models import League
 from apps.match.models import MatchResult
 from apps.league.serializers import LeagueSerializer
@@ -82,7 +82,7 @@ class UserInLeague(APIView):
 
             in_league: Bool
         """
-        if Bet.objects.filter(user=request.user, state=True).exists():
+        if BetRound.objects.filter(user=request.user, state=True).exists():
             return Response({'in_league': True})
         
         return Response({'in_league': False})
@@ -98,8 +98,8 @@ class LeagueUser(APIView):
             TODO update once multileague feature created
         """
         try:
-            bet = Bet.objects.filter(user=request.user, state=True).first()
-            league = League.objects.filter(round__bet=bet, state=True).distinct().first()
+            bet_round = BetRound.objects.filter(user=request.user, state=True).first()
+            league = League.objects.filter(round__bet_rounds=bet_round, state=True).distinct().first()
             league_serializer = LeagueSerializer(league)
 
             return Response(league_serializer.data)

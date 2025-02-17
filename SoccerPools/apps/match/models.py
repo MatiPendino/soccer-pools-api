@@ -1,7 +1,7 @@
 from django.db import models
 from apps.base.models import BaseModel
 from apps.league.models import Team, Round
-from apps.bet.models import Bet
+from apps.bet.models import BetRound
 
 
 class Match(BaseModel):
@@ -43,7 +43,7 @@ class MatchResult(BaseModel):
     goals_team_1 = models.PositiveSmallIntegerField(default=0)
     goals_team_2 = models.PositiveSmallIntegerField(default=0)
     original_result = models.BooleanField('Original result', default=False)
-    bet = models.ForeignKey(Bet, related_name='match_result', on_delete=models.SET_NULL, null=True, blank=True)
+    bet_round = models.ForeignKey(BetRound, related_name='match_results', on_delete=models.SET_NULL, null=True, blank=True)
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
     points = models.PositiveSmallIntegerField(default=0)
 

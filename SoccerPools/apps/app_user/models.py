@@ -61,13 +61,13 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
         """
             Removes logically the User and its Bets and MatchResults
         """
-        Bet = apps.get_model('bet', 'Bet')
+        BetRound = apps.get_model('bet', 'BetRound')
         MatchResult = apps.get_model('match', 'MatchResult')
         with transaction.atomic():
             self.is_active = False
             self.save()
 
-            bets = Bet.objects.filter(user=self, state=True)
-            match_results = MatchResult.objects.filter(bet__in=bets, state=True)
+            bet_rounds = BetRound.objects.filter(user=self, state=True)
+            match_results = MatchResult.objects.filter(bet_round__in=bet_rounds, state=True)
             match_results.update(state=False)
-            bets.update(state=False)
+            bet_rounds.update(state=False)
