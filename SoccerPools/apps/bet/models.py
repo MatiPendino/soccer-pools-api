@@ -3,12 +3,36 @@ from apps.base.models import BaseModel
 from apps.app_user.models import AppUser
 from apps.league.models import League, Round
 from .managers import BetRoundManager
+from .utils import generate_unique_code
 
-class BetRound(BaseModel):
-    user = models.ForeignKey(AppUser, related_name='bet_rounds', on_delete=models.CASCADE)
+class AbstractBetModel(BaseModel):
     operation_code = models.CharField(max_length=20, null=True, blank=True)
-    round = models.ForeignKey(Round, related_name='bet_rounds', on_delete=models.CASCADE)
     winner = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
+
+    def __save__(self, *args, **kwargs):
+        if not self.operation_code:
+            self.operation_code = generate_unique_code(self.__class__)
+        super().save(*args, **kwargs)
+
+
+class BetLeague(AbstractBetModel):
+    user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
+    league = models.ForeignKey(League, on_delete=models.CASCADE)
+    is_last_visited_league = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.user.username} - {self.league.name}'
+    
+
+class BetRound(AbstractBetModel):
+    user = models.ForeignKey(AppUser, related_name='bet_rounds', on_delete=models.CASCADE)
+    round = models.ForeignKey(Round, related_name='bet_rounds', on_delete=models.CASCADE)
+    bet_league = models.ForeignKey(
+        BetLeague, related_name='bet_rounds', on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     objects = BetRoundManager()
 

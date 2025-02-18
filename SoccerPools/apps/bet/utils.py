@@ -1,12 +1,9 @@
 import string
 import random
-from apps.bet.models import BetRound
 
-def generate_unique_code():
+def generate_unique_code(model):
     characters = string.ascii_letters + string.digits
-    unique_code = ''.join(random.choices(characters, k=13))    
-    try:
-        operation_code = BetRound.objects.get(operation_code=unique_code)
-        return generate_unique_code()
-    except:
-        return unique_code
+    while True:
+        unique_code = ''.join(random.choices(characters, k=13))
+        if not model.objects.filter(operation_code=unique_code).exists():
+            return unique_code
