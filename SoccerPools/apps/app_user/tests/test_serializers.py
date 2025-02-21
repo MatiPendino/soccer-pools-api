@@ -1,5 +1,5 @@
 from django.test import TestCase
-from apps.app_user.serializers import UserRegisterSerializer, UserLoginSerializer, UserSerializer
+from apps.app_user.serializers import UserRegisterSerializer, UserLoginSerializer
 from apps.app_user.models import AppUser
 
 class UserRegisterSerializerTest(TestCase):

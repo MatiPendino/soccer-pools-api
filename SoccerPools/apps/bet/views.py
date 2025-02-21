@@ -5,9 +5,8 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from apps.league.models import Round, League
 from apps.match.models import Match, MatchResult
-from apps.app_user.models import AppUser
 from apps.tournament.models import TournamentUser
-from .serializers import BetRoundSerializer, BetRoundCreateSerializer
+from .serializers import BetRoundSerializer
 from .models import BetRound, BetLeague
 from .utils import generate_response_data
 

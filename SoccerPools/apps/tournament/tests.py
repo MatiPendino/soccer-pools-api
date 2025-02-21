@@ -5,7 +5,7 @@ from PIL import Image
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from apps.league.factories import LeagueFactory
-from .factories import TournamentFactory, TournamentUserFactory
+from .factories import TournamentFactory
 from apps.tournament.models import Tournament, TournamentUser
 
 User = get_user_model()

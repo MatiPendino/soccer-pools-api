@@ -1,11 +1,10 @@
 import requests
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render
-from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
-from rest_framework import permissions, status, generics
+from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -13,8 +12,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.files.base import ContentFile
 from django.utils.text import slugify
 from apps.bet.models import BetRound, BetLeague
-from apps.league.models import League
-from apps.match.models import MatchResult
 from apps.league.serializers import LeagueSerializer
 from .models import AppUser
 from .serializers import UserLoginSerializer, UserRegisterSerializer, UserSerializer
