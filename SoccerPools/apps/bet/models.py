@@ -2,7 +2,7 @@ from django.db import models
 from apps.base.models import BaseModel
 from apps.app_user.models import AppUser
 from apps.league.models import League, Round
-from .managers import BetRoundManager
+from .managers import BetRoundManager, BetLeagueManager
 from .utils import generate_unique_code
 
 class AbstractBetModel(BaseModel):
@@ -22,6 +22,8 @@ class BetLeague(AbstractBetModel):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     is_last_visited_league = models.BooleanField(default=False)
+
+    objects = BetLeagueManager()
 
     def __str__(self):
         return f'{self.user.username} - {self.league.name}'

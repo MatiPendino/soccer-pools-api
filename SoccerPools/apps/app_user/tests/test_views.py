@@ -5,7 +5,7 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 from apps.app_user.factories import AppUserFactory
 from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
-from apps.bet.factories import BetRoundFactory
+from apps.bet.factories import BetRoundFactory, BetLeagueFactory
 from apps.match.factories import MatchFactory, MatchResultFactory
 from apps.match.models import MatchResult
 from apps.bet.models import BetRound
@@ -116,7 +116,7 @@ class UserViewTest(TestCase):
 
 class UserInLeagueTest(APITestCase):
     def setUp(self):
-        self.user = AppUserFactory()
+        self.user = AppUserFactory(email='user@gmail.com')
         self.league = LeagueFactory()
         self.round = RoundFactory(league=self.league)
         self.team_1 = TeamFactory(league=self.league, name='Rosario Central')
@@ -140,19 +140,38 @@ class UserInLeagueTest(APITestCase):
 
 class LeagueUserTest(APITestCase):
     def setUp(self):
-        self.user = AppUserFactory()
+        self.user = AppUserFactory(email='leagueuser@gmail.com')
         self.league = LeagueFactory(name='Liga Argentina')
+        self.league_2 = LeagueFactory(name='Liga Chilena')
         self.round = RoundFactory(league=self.league)
         self.team_1 = TeamFactory(league=self.league, name='Rosario Central')
         self.team_2 = TeamFactory(league=self.league, name='NOB')
         self.url = f'/api/user/user_league/'
 
-    def test_user_league_bets(self):
-        self.bet_round = BetRoundFactory(user=self.user, round=self.round)
+    def test_user_league_last_visited(self):
+        self.bet_league = BetLeagueFactory(
+            user=self.user, league=self.league, is_last_visited_league=True
+        )
+        self.bet_league_2 = BetLeagueFactory(
+            user=self.user, league=self.league_2, is_last_visited_league=False
+        )
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(response.data.get('name'), self.league_2.name)
         self.assertEqual(response.data.get('name'), self.league.name)
+
+    def test_user_league_not_last_visited(self):
+        self.bet_league = BetLeagueFactory(
+            user=self.user, league=self.league, is_last_visited_league=False
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url)
+        self.bet_league.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('name'), self.league.name)
+        self.assertTrue(self.bet_league.is_last_visited_league)
 
 
 class RemoveUserSetUp(APITestCase):

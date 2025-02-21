@@ -6,7 +6,7 @@ class LeagueFactory(factory.django.DjangoModelFactory):
         model = League
     
     name = factory.Faker('word')
-
+    slug = factory.Faker('word')
 
 class RoundFactory(factory.django.DjangoModelFactory):
     class Meta:

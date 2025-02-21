@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.files.base import ContentFile
 from django.utils.text import slugify
-from apps.bet.models import BetRound
+from apps.bet.models import BetRound, BetLeague
 from apps.league.models import League
 from apps.match.models import MatchResult
 from apps.league.serializers import LeagueSerializer
@@ -92,14 +92,11 @@ class LeagueUser(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
-        """
-            Gets the League based on the User
-
-            TODO update once multileague feature created
-        """
+        """Gets the League based on the User"""
+        user = request.user
         try:
-            bet_round = BetRound.objects.filter(user=request.user, state=True).first()
-            league = League.objects.filter(round__bet_rounds=bet_round, state=True).distinct().first()
+            bet_league = BetLeague.objects.get_last_visited_bet_league(user)
+            league = bet_league.league
             league_serializer = LeagueSerializer(league)
 
             return Response(league_serializer.data)

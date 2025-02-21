@@ -41,3 +41,32 @@ class BetRoundManager(Manager):
                 output_field=IntegerField()
             )
         ).order_by('-matches_points')
+    
+
+class BetLeagueManager(Manager):
+    def get_last_visited_bet_league(self, user):
+        bet_league = self.filter(
+            user=user, 
+            state=True,
+            is_last_visited_league=True
+        ).first()
+        if not bet_league:
+            bet_league = self.filter(
+                user=user,
+                state=True
+            ).first()
+            bet_league.is_last_visited_league = True
+            bet_league.save()
+
+        return bet_league
+    
+    def deactivate_last_visited_bet_league(self, user):
+        bet_league_user_last_visited = self.filter(
+            state=True,
+            user=user,
+            is_last_visited_league=True
+        )
+        if bet_league_user_last_visited.exists():
+            bet_league_user_last_visited = bet_league_user_last_visited.first()
+            bet_league_user_last_visited.is_last_visited_league = False
+            bet_league_user_last_visited.save()

@@ -6,11 +6,19 @@ from .models import League, Round, Team
 class LeagueListApiView(generics.ListAPIView):
     serializer_class = LeagueSerializer
     queryset = League.objects.filter(state=True)
+
+    def get_serializer_context(self):
+        """Pass request context so we can access the user in the serializer."""
+        return {'request': self.request}
     
 
 class LeagueRetrieveApiView(generics.RetrieveAPIView):
     serializer_class = LeagueSerializer
     queryset = League.objects.filter(state=True)
+
+    def get_serializer_context(self):
+        """Pass request context so we can access the user in the serializer."""
+        return {'request': self.request}
 
 
 class RoundListApiView(generics.ListAPIView):

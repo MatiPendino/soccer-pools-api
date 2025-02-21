@@ -2,18 +2,32 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from django.db.models import Sum
 from apps.app_user.factories import AppUserFactory
+from apps.app_user.models import AppUser
 from apps.match.factories import MatchFactory, MatchResultFactory
 from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
 from apps.tournament.factories import TournamentFactory, TournamentUserFactory
-from apps.bet.factories import BetRoundFactory
-from apps.bet.models import BetRound
+from apps.bet.factories import BetRoundFactory, BetLeagueFactory
+from apps.league.models import League
+from apps.bet.models import BetLeague, BetRound
 from apps.match.models import MatchResult
 from apps.tournament.models import TournamentUser
 
 class BetRoundResultsTest(APITestCase):
     def setUp(self):
-        self.user_1 = AppUserFactory(email='user1@gmail.com', username='user1')
-        self.user_2 = AppUserFactory(email='user2@gmail.com', username='user2')
+        self.user_1 = AppUser.objects.create_user(
+            username='matias',
+            email='matias@gmail.com',
+            name='Mati',
+            last_name='Pendino',
+            password='123456789'
+        )
+        self.user_2 = AppUser.objects.create_user(
+            username='mati',
+            email='mati@gmail.com',
+            name='Matias',
+            last_name='Pendino',
+            password='123456789'
+        )
         self.league = LeagueFactory()
         self.round_general = RoundFactory(league=self.league, is_general_round=True)
         self.round_1 = RoundFactory(league=self.league)
@@ -115,9 +129,13 @@ class BetRoundResultsTest(APITestCase):
 
         
 class LeagueBetsMatchResultsCreateTest(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        LeagueFactory(name='My League', slug='babosa')
+
     def setUp(self):
-        self.user = AppUserFactory()
-        self.league = LeagueFactory(name='My League')
+        self.user = AppUserFactory(email='leaguebets@gmail.com')
+        self.league = League.objects.first()
         self.round_1 = RoundFactory(league=self.league)
         self.round_2 = RoundFactory(league=self.league)
         self.team_1 = TeamFactory(league=self.league)
@@ -136,7 +154,8 @@ class LeagueBetsMatchResultsCreateTest(APITestCase):
 
     def test_league_bets_creation(self):
         """
-            Test that all the Bets and MatchResults are created for the user based on the league
+            Test that all the BetLeague, BetRound and MatchResult instances are created 
+            for the user based on the league
         """
         self.client.force_authenticate(user=self.user)
         data = {
@@ -145,5 +164,38 @@ class LeagueBetsMatchResultsCreateTest(APITestCase):
         response = self.client.post(self.url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(BetLeague.objects.count(), 1)
         self.assertEqual(BetRound.objects.count(), 2)
+        self.assertEqual(BetRound.objects.first().bet_league, BetLeague.objects.first())
         self.assertEqual(MatchResult.objects.count(), 6)
+
+    def test_already_created_bet_league(self):
+        """
+            Test that when there is an existing bet_league for the user and league we send,
+            NO NEW BetLeague, BetRound or MatchResult instances are created
+        """
+        self.team_1 = TeamFactory(league=self.league)
+        self.team_2 = TeamFactory(league=self.league)
+        self.team_3 = TeamFactory(league=self.league)
+        self.team_4 = TeamFactory(league=self.league)
+        self.match_1 = MatchFactory(round=self.round_1, team_1=self.team_1, team_2=self.team_2)
+        self.match_2 = MatchFactory(round=self.round_1, team_1=self.team_3, team_2=self.team_4)
+        self.match_3 = MatchFactory(round=self.round_2, team_1=self.team_1, team_2=self.team_3)
+        self.match_4 = MatchFactory(round=self.round_2, team_1=self.team_2, team_2=self.team_4)
+        self.bet_league = BetLeagueFactory(user=self.user, league=self.league)
+        self.bet_round_1 = BetRound.objects.create(user=self.user, round=self.round_1, bet_league=self.bet_league)
+        self.bet_round_2 = BetRound.objects.create(user=self.user, round=self.round_2, bet_league=self.bet_league)
+        self.match_result_1 = MatchResultFactory(bet_round=self.bet_round_1, match=self.match_1)
+        self.match_result_2 = MatchResultFactory(bet_round=self.bet_round_2, match=self.match_2)
+
+        self.client.force_authenticate(user=self.user)
+        data = {
+            'league_slug': self.league.slug,
+        }
+        response = self.client.post(self.url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(BetLeague.objects.count(), 1)
+        self.assertEqual(BetRound.objects.count(), 2)
+        self.assertEqual(BetRound.objects.first().bet_league, BetLeague.objects.first())
+        self.assertEqual(MatchResult.objects.count(), 2)

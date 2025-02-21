@@ -9,7 +9,7 @@ class AppUserModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         User.objects.create_user(
-            email='testing@gmail.com',
+            email='testin@gmail.com',
             name='Mati',
             last_name='Pendino',
             username='matipendino',
