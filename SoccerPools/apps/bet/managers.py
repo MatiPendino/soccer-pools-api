@@ -19,11 +19,11 @@ class BetRoundManager(Manager):
                 # If round.is_general_round == True, sum points from all bets in the same league
                 Coalesce(
                     Sum(
-                        'user__bet_rounds__match_results__points',
+                        'bet_league__bet_rounds__match_results__points',
                         filter=(
                             Q(round__is_general_round=True) &
-                            Q(user__bet_rounds__state=True) &
-                            Q(user__bet_rounds__round__league=F('round__league'))
+                            Q(bet_league__bet_rounds__state=True) &
+                            Q(bet_league__bet_rounds__round__league=F('round__league'))
                         )
                     ), Value(0),
                     output_field=IntegerField()

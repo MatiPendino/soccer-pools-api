@@ -14,7 +14,7 @@ class MatchResultsListCreateApiView(generics.ListCreateAPIView):
         round_id = self.request.query_params.get('round_id')
         match_results = MatchResult.objects.filter(
             bet_round__round__id=round_id,
-            bet_round__user=self.request.user,
+            bet_round__bet_league__user=self.request.user,
             state=True
         ).order_by('match__start_date')
         return match_results

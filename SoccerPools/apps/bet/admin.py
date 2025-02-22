@@ -28,14 +28,14 @@ class BetRoundResources(resources.ModelResource):
         model = BetRound
 
 class BetRoundAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    search_fields = ('operation_code', 'user__username', 'round__name')
-    list_display = ('get_user', 'operation_code', 'get_round', 'points', 'winner')
+    search_fields = ('operation_code', 'bet_league__user__username', 'round__name')
+    list_display = ('get_user_username', 'operation_code', 'get_round', 'points', 'winner')
     resource_class = BetRoundResources
 
-    def get_user(self, obj):
-        return obj.user
-    get_user.admin_order_field = 'user__username'
-    get_user.short_description = 'User'
+    def get_user_username(self, obj):
+        return obj.bet_league.get_user_username()
+    get_user_username.admin_order_field = 'bet_league__user__username'
+    get_user_username.short_description = 'User'
 
     def get_round(self, obj):
         return obj.round

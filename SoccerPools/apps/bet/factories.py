@@ -17,5 +17,4 @@ class BetRoundFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = BetRound
 
-    user = factory.SubFactory(AppUserFactory)
     round = factory.SubFactory(RoundFactory)

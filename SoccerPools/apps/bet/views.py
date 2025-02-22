@@ -27,7 +27,7 @@ class BetRoundResultsApiView(generics.ListAPIView):
             )
             users = [tournament_user.user for tournament_user in tournament_users]
 
-            bet_rounds = bet_rounds.filter(user__in=users)
+            bet_rounds = bet_rounds.filter(bet_league__user__in=users)
 
         return bet_rounds
 
@@ -72,7 +72,7 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
 
             bet_rounds = BetRound.objects.filter(
                 state=True,
-                user=user,
+                bet_league__user=user,
                 round__league=league
             )
             response_data = generate_response_data(
@@ -95,7 +95,7 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
 
             # Create bet rounds for the league rounds that are NOT finalized
             bet_rounds = [
-                BetRound(round=league_round, user=user, bet_league=new_bet_league) 
+                BetRound(round=league_round, bet_league=new_bet_league) 
                 for league_round in rounds
             ]
             BetRound.objects.bulk_create(bet_rounds)

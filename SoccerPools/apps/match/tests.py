@@ -2,7 +2,7 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
-from apps.bet.factories import BetRoundFactory
+from apps.bet.factories import BetRoundFactory, BetLeagueFactory
 from apps.match.models import MatchResult
 from apps.match.serializers import MatchResultSerializer
 from .factories import MatchResultFactory, MatchFactory
@@ -25,7 +25,8 @@ class MatchResultsListCreateTest(APITestCase):
         self.team_1 = TeamFactory(league=self.league, name='Rosario Central')
         self.team_2 = TeamFactory(league=self.league, name='NOB')
         self.team_3 = TeamFactory(league=self.league, name='River Plate')
-        self.bet_round = BetRoundFactory(round=self.round, user=self.user)
+        self.bet_league = BetLeagueFactory(league=self.league, user=self.user)
+        self.bet_round = BetRoundFactory(round=self.round, bet_league=self.bet_league)
         self.match_1 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
         self.match_2 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_3)
         self.match_result_1 = MatchResultFactory(bet_round=self.bet_round, match=self.match_1)
@@ -57,7 +58,8 @@ class MatchResultsUpdateTest(APITestCase):
         self.team_1 = TeamFactory(league=self.league, name='Rosario Central')
         self.team_2 = TeamFactory(league=self.league, name='NOB')
         self.team_3 = TeamFactory(league=self.league, name='River Plate')
-        self.bet_round = BetRoundFactory(round=self.round, user=self.user)
+        self.bet_league = BetLeagueFactory(league=self.league, user=self.user)
+        self.bet_round = BetRoundFactory(round=self.round, bet_league=self.bet_league)
         self.match_1 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
         self.match_2 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_3)
         self.match_result_1 = MatchResultFactory(bet_round=self.bet_round, match=self.match_1)
@@ -111,7 +113,8 @@ class MatchResultOriginalTest(APITestCase):
         self.round = RoundFactory(league=self.league)
         self.team_1 = TeamFactory(league=self.league, name='Rosario Central')
         self.team_2 = TeamFactory(league=self.league, name='NOB')
-        self.bet_round = BetRoundFactory(round=self.round, user=self.user)
+        self.bet_league = BetLeagueFactory(league=self.league, user=self.user)
+        self.bet_round = BetRoundFactory(bet_league=self.bet_league, round=self.round)
         self.match = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
         self.match_result_user = MatchResultFactory(bet_round=self.bet_round, match=self.match)
         self.match_result_original = MatchResult.objects.create(

@@ -79,7 +79,7 @@ class UserInLeague(APIView):
 
             in_league: Bool
         """
-        if BetRound.objects.filter(user=request.user, state=True).exists():
+        if BetLeague.objects.filter(user=request.user, state=True).exists():
             return Response({'in_league': True})
         
         return Response({'in_league': False})

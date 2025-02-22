@@ -59,15 +59,19 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
     
     def remove_user(self):
         """
-            Removes logically the User and its Bets and MatchResults
+            Removes logically the User and its BetLeague, BetRound and MatchResult instances
         """
         BetRound = apps.get_model('bet', 'BetRound')
+        BetLeague = apps.get_model('bet', 'BetLeague')
         MatchResult = apps.get_model('match', 'MatchResult')
         with transaction.atomic():
             self.is_active = False
             self.save()
 
-            bet_rounds = BetRound.objects.filter(user=self, state=True)
+            bet_leagues = BetLeague.objects.filter(user=self, state=True)
+            bet_rounds = BetRound.objects.filter(bet_league__in=bet_leagues, state=True)
             match_results = MatchResult.objects.filter(bet_round__in=bet_rounds, state=True)
+
             match_results.update(state=False)
             bet_rounds.update(state=False)
+            bet_leagues.update(state=False)

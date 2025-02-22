@@ -8,7 +8,7 @@ from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
 from apps.bet.factories import BetRoundFactory, BetLeagueFactory
 from apps.match.factories import MatchFactory, MatchResultFactory
 from apps.match.models import MatchResult
-from apps.bet.models import BetRound
+from apps.bet.models import BetRound, BetLeague
 
 User = get_user_model()
 class UserRegisterViewTest(TestCase):
@@ -124,7 +124,8 @@ class UserInLeagueTest(APITestCase):
         self.url = f'/api/user/user_in_league/'
 
     def test_user_in_league(self):
-        self.bet_round = BetRoundFactory(round=self.round, user=self.user)
+        self.bet_league = BetLeagueFactory(league=self.league, user=self.user)
+        self.bet_round = BetRoundFactory(round=self.round)
         self.match = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
@@ -193,7 +194,8 @@ class RemoveUserSetUp(APITestCase):
         self.team_4 = TeamFactory(name='Team 4', league=self.league)
         self.match_1 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
         self.match_2 = MatchFactory(round=self.round, team_1=self.team_3, team_2=self.team_4)
-        self.bet_round = BetRoundFactory(user=self.user, round=self.round)
+        self.bet_league = BetLeagueFactory(user=self.user, league=self.league)
+        self.bet_round = BetRoundFactory(round=self.round, bet_league=self.bet_league)
         self.match_result_1 = MatchResultFactory(bet_round=self.bet_round, match=self.match_1)
         self.match_result_2 = MatchResultFactory(bet_round=self.bet_round, match=self.match_2)
 
@@ -207,7 +209,7 @@ class UserDestroyTest(RemoveUserSetUp):
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(MatchResult.objects.filter(state=True).count(), 0)
-        self.assertEqual(BetRound.objects.filter(state=True).count(), 0)
+        self.assertEqual(BetLeague.objects.filter(state=True).count(), 0)
         self.assertEqual(BetRound.objects.filter(state=True).count(), 0)
 
 
@@ -223,5 +225,5 @@ class RemoveUserTest(RemoveUserSetUp):
         }
         response = self.client.post(self.url, data)
         self.assertEqual(MatchResult.objects.filter(state=True).count(), 0)
-        self.assertEqual(BetRound.objects.filter(state=True).count(), 0)
+        self.assertEqual(BetLeague.objects.filter(state=True).count(), 0)
         self.assertEqual(BetRound.objects.filter(state=True).count(), 0)

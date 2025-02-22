@@ -28,9 +28,14 @@ class BetLeague(AbstractBetModel):
     def __str__(self):
         return f'{self.user.username} - {self.league.name}'
     
+    def get_user_username(self):
+        return self.user.username
+    
+    def get_user_profile_image(self):
+        return self.user.profile_image.url
+    
 
 class BetRound(AbstractBetModel):
-    user = models.ForeignKey(AppUser, related_name='bet_rounds', on_delete=models.CASCADE)
     round = models.ForeignKey(Round, related_name='bet_rounds', on_delete=models.CASCADE)
     bet_league = models.ForeignKey(
         BetLeague, related_name='bet_rounds', on_delete=models.SET_NULL, null=True, blank=True
@@ -43,7 +48,7 @@ class BetRound(AbstractBetModel):
         if self.round.is_general_round:
             match_points = BetRound.objects.filter(
                 state=True,
-                user=self.user,
+                bet_league__user=self.bet_league.user,
                 round__league=self.round.league,
                 round__is_general_round=False
             ).aggregate(total_points=models.Sum(
@@ -57,4 +62,4 @@ class BetRound(AbstractBetModel):
         return match_points
 
     def __str__(self):
-        return f'{self.user} - {self.round.name}'
+        return f'{self.bet_league.get_user_username()} - {self.round.name}'
