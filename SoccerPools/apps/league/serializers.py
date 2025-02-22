@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.bet.models import BetLeague
+from apps.bet.models import BetLeague, BetRound
 from .models import League, Round, Team
 
 class LeagueSerializer(serializers.ModelSerializer):
@@ -18,14 +18,27 @@ class LeagueSerializer(serializers.ModelSerializer):
 
 
 class RoundSerializer(serializers.ModelSerializer):
+    has_bet_round = serializers.SerializerMethodField()
+
     class Meta:
         model = Round
         fields = (
             'id', 'name', 'slug', 'number_round', 'start_date', 'end_date', 'round_state',
-            'league'
+            'league', 'has_bet_round'
         )
 
     league = LeagueSerializer()
+
+    def get_has_bet_round(self, obj):
+        request = self.context.get('request')
+
+        if request and request.user.is_authenticated:
+            return BetRound.objects.filter(
+                state=True,
+                bet_league__user=request.user,
+                round=obj
+            ).exists()
+        return False
 
 
 class TeamSerializer(serializers.ModelSerializer):

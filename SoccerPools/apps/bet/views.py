@@ -2,6 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from apps.league.models import Round, League
 from apps.match.models import Match, MatchResult
@@ -50,7 +51,13 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
     def post(self, request, *args, **kwargs):
         league = get_object_or_404(League, slug=request.data['league_slug'])
         user = request.user
-        rounds = Round.objects.filter(league=league, state=True)
+        # Filter all the NOT finalized rounds
+        rounds = Round.objects.filter(
+            Q(round_state=Round.NOT_STARTED_ROUND) | 
+            Q(round_state=Round.PENDING_ROUND),
+            state=True,
+            league=league,
+        )
 
         # Deactivate if there is another bet_league instance with last_visited in True
         BetLeague.objects.deactivate_last_visited_bet_league(user)
@@ -86,14 +93,14 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
                 is_last_visited_league=True
             )
 
-            # Create bet rounds for all the league rounds
+            # Create bet rounds for the league rounds that are NOT finalized
             bet_rounds = [
                 BetRound(round=league_round, user=user, bet_league=new_bet_league) 
                 for league_round in rounds
             ]
             BetRound.objects.bulk_create(bet_rounds)
 
-            # Create match results for all the matches in all the bets
+            # Create match results for all the matches in all the bet rounds
             for bet_round in bet_rounds:
                 matches = Match.objects.filter(round=bet_round.round, state=True)
                 match_results = [MatchResult(match=soccer_match, bet_round=bet_round) for soccer_match in matches]
@@ -107,4 +114,8 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
         )
 
         return Response(response_data, status=status.HTTP_201_CREATED)
+    
+    def get_serializer_context(self):
+        """Pass request context so we can access the user in the serializer."""
+        return {'request': self.request}
 

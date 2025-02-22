@@ -14,6 +14,7 @@ class RoundFactory(factory.django.DjangoModelFactory):
 
     name = factory.Faker('word')
     number_round = factory.Faker('random_int', min=0, max=100)
+    round_state = Round.NOT_STARTED_ROUND
     league = factory.SubFactory(LeagueFactory)
     is_general_round = False
 

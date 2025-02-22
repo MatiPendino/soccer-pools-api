@@ -7,7 +7,7 @@ from apps.match.factories import MatchFactory, MatchResultFactory
 from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
 from apps.tournament.factories import TournamentFactory, TournamentUserFactory
 from apps.bet.factories import BetRoundFactory, BetLeagueFactory
-from apps.league.models import League
+from apps.league.models import League, Round
 from apps.bet.models import BetLeague, BetRound
 from apps.match.models import MatchResult
 from apps.tournament.models import TournamentUser
@@ -174,19 +174,19 @@ class LeagueBetsMatchResultsCreateTest(APITestCase):
             Test that when there is an existing bet_league for the user and league we send,
             NO NEW BetLeague, BetRound or MatchResult instances are created
         """
-        self.team_1 = TeamFactory(league=self.league)
-        self.team_2 = TeamFactory(league=self.league)
-        self.team_3 = TeamFactory(league=self.league)
-        self.team_4 = TeamFactory(league=self.league)
-        self.match_1 = MatchFactory(round=self.round_1, team_1=self.team_1, team_2=self.team_2)
-        self.match_2 = MatchFactory(round=self.round_1, team_1=self.team_3, team_2=self.team_4)
-        self.match_3 = MatchFactory(round=self.round_2, team_1=self.team_1, team_2=self.team_3)
-        self.match_4 = MatchFactory(round=self.round_2, team_1=self.team_2, team_2=self.team_4)
+        self.team_7 = TeamFactory(league=self.league)
+        self.team_8 = TeamFactory(league=self.league)
+        self.team_9 = TeamFactory(league=self.league)
+        self.team_10 = TeamFactory(league=self.league)
+        self.match_1 = MatchFactory(round=self.round_1, team_1=self.team_7, team_2=self.team_8)
+        self.match_7 = MatchFactory(round=self.round_1, team_1=self.team_9, team_2=self.team_10)
+        self.match_8 = MatchFactory(round=self.round_2, team_1=self.team_7, team_2=self.team_9)
+        self.match_9 = MatchFactory(round=self.round_2, team_1=self.team_8, team_2=self.team_10)
         self.bet_league = BetLeagueFactory(user=self.user, league=self.league)
         self.bet_round_1 = BetRound.objects.create(user=self.user, round=self.round_1, bet_league=self.bet_league)
         self.bet_round_2 = BetRound.objects.create(user=self.user, round=self.round_2, bet_league=self.bet_league)
-        self.match_result_1 = MatchResultFactory(bet_round=self.bet_round_1, match=self.match_1)
-        self.match_result_2 = MatchResultFactory(bet_round=self.bet_round_2, match=self.match_2)
+        self.match_result_1 = MatchResultFactory(bet_round=self.bet_round_1, match=self.match_8)
+        self.match_result_2 = MatchResultFactory(bet_round=self.bet_round_2, match=self.match_9)
 
         self.client.force_authenticate(user=self.user)
         data = {
@@ -199,3 +199,24 @@ class LeagueBetsMatchResultsCreateTest(APITestCase):
         self.assertEqual(BetRound.objects.count(), 2)
         self.assertEqual(BetRound.objects.first().bet_league, BetLeague.objects.first())
         self.assertEqual(MatchResult.objects.count(), 2)
+
+    def test_finalized_round(self):
+        """
+            Test that NO BetRound or MatchResult instances are created for a Round that
+            is on finalized round_state
+        """
+        self.round_3 = RoundFactory(league=self.league, round_state=Round.FINALIZED_ROUND)
+        self.match_1 = MatchFactory(round=self.round_3, team_1=self.team_1, team_2=self.team_4)
+        self.match_2 = MatchFactory(round=self.round_3, team_1=self.team_3, team_2=self.team_2)
+
+        self.client.force_authenticate(user=self.user)
+        data = {
+            'league_slug': self.league.slug,
+        }
+        response = self.client.post(self.url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(BetLeague.objects.count(), 1)
+        self.assertEqual(BetRound.objects.count(), 2)
+        self.assertEqual(BetRound.objects.first().bet_league, BetLeague.objects.first())
+        self.assertEqual(MatchResult.objects.count(), 6)
