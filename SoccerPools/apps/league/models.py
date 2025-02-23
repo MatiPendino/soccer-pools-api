@@ -7,6 +7,8 @@ class League(BaseModel):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, null=True, blank=True)
     logo = models.ImageField('Logo of the league', upload_to='league', blank=True, null=True)
+    logo_url = models.URLField(blank=True, null=True)
+    api_league_id = models.PositiveIntegerField(unique=True, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -37,6 +39,7 @@ class Round(BaseModel):
     fee_bet = models.DecimalField('Fee of the bet', max_digits=7, decimal_places=2, help_text='This is the amount for the platform', default=0)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     is_general_round = models.BooleanField(default=False)
+    api_round_name = models.CharField(max_length=60, blank=True, null=True)
 
     def __str__(self):
         return f'{self.name} - {self.league}'
@@ -51,7 +54,9 @@ class Team(BaseModel):
     slug = models.SlugField(unique=True, null=True, blank=True)
     acronym = models.CharField(max_length=5, null=True, blank=True, help_text='Shorter way to display team name')
     badge = models.ImageField('Badge of the team', upload_to='league', null=True, blank=True)
+    badge_url = models.URLField(null=True, blank=True)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
+    api_team_id = models.PositiveIntegerField(unique=True, blank=True, null=True)
 
     def __str__(self):
         return f'{self.name} - {self.league}'

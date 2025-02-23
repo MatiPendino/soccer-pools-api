@@ -1,6 +1,11 @@
 from celery import shared_task
+from decouple import config
+import requests
+import json
+from django.db import transaction
 from django.utils.timezone import now, timedelta
-from .models import Match
+from .models import Match, MatchResult
+from .utils import get_match_result_points
 
 @shared_task
 def check_upcoming_matches():
@@ -15,3 +20,54 @@ def check_upcoming_matches():
         c_match.match_state = Match.PENDING_MATCH
         c_match.save()
         print(f"Upcoming match: {c_match} starts at {c_match.start_date}")
+
+
+@shared_task
+def finalize_matches():
+    """
+        Check if any match pending match is already finished, change its state to
+        FINALIZED and update the match result points
+    """
+    TIMEZONE = 'America/Argentina/Ushuaia'
+    pending_matches = Match.objects.filter(state=True, match_state=Match.PENDING_MATCH)
+    url = f'https://v3.football.api-sports.io/fixtures?&timezone={TIMEZONE}'
+    headers = {
+        'x-apisports-key': config('API_FOOTBALL_KEY')
+    }
+    for match in pending_matches:
+        if match.api_match_id:
+            url = url + f'&id={match.api_match_id}'
+            response = requests.get(url, headers=headers)
+            response_obj = json.loads(response.text)
+            match_response = response_obj.get('response')[0]
+            goals_home = match_response.get('goals').get('home')
+            goals_away = match_response.get('goals').get('away')
+            fixture_status = match_response.get('fixture').get('status')
+            long = fixture_status.get('long')
+
+            if long == 'Match Finished':
+                original_match_result, was_created = MatchResult.objects.get_or_create(
+                    original_result=True,
+                    match=match,
+                    defaults={
+                        'goals_team_1': goals_home,
+                        'goals_team_2': goals_away
+                    }
+                )
+                user_match_results = MatchResult.objects.filter(
+                    state=True,
+                    match=match,
+                    original_result=False
+                )
+
+                with transaction.atomic(): 
+                    for match_result in user_match_results:
+                        match_result.points = get_match_result_points(
+                            user_goals_team_1=match_result.goals_team_1,
+                            user_goals_team_2=match_result.goals_team_2,
+                            original_goals_team_1=original_match_result.goals_team_1,
+                            original_goals_team_2=original_match_result.goals_team_2
+                        )
+                        match_result.save()
+                    match.match_state = Match.FINALIZED_MATCH
+                    match.save()

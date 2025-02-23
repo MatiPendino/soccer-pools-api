@@ -21,6 +21,7 @@ class Match(BaseModel):
     round = models.ForeignKey(Round, on_delete=models.CASCADE)
     start_date = models.DateTimeField('Start date of the match', blank=True, null=True)
     match_state = models.PositiveSmallIntegerField('State of the match', default=0, choices=STATE_CODES)
+    api_match_id = models.PositiveIntegerField(unique=True, null=True, blank=True)
 
     def __str__(self):
         return f'{self.team_1.name} vs {self.team_2.name} - {self.round.name}'
