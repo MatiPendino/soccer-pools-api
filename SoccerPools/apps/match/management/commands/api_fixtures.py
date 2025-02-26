@@ -7,14 +7,12 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('league_id', type=int)
         parser.add_argument('season', type=int)
-        parser.add_argument('create_matches', type=bool)
         parser.add_argument('round', type=str, nargs='?')
     
     def handle(self, *args, **options):
         TIMEZONE = 'America/Argentina/Ushuaia'
         league_id = options.get('league_id')
         season = options.get('season')
-        create_matches = options.get('create_matches')
         round = options.get('round')
 
         url = f'https://v3.football.api-sports.io/fixtures?league={league_id}&season={season}&timezone={TIMEZONE}'
