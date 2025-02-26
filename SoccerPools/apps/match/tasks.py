@@ -10,11 +10,15 @@ from .utils import get_match_result_points
 @shared_task
 def check_upcoming_matches():
     """
-        Check if any match start_date is within 20 minutes but hasn't started yet and 
+        Check if any NOT STARTED match start_date is within 20 minutes but hasn't started yet and 
         sets its state to pending
     """
     start_time = now() + timedelta(minutes=20)
-    matches = Match.objects.filter(start_date__gte=now(), start_date__lte=start_time)
+    matches = Match.objects.filter(
+        start_date__gte=now(), 
+        start_date__lte=start_time,
+        match_state=Match.NOT_STARTED_MATCH
+    )
     
     for c_match in matches:
         c_match.match_state = Match.PENDING_MATCH
