@@ -9,6 +9,14 @@ class LeagueSerializer(serializers.ModelSerializer):
         model = League
         fields = ('id', 'name', 'slug', 'logo', 'is_user_joined')
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        if not data['logo']:
+            data['logo'] = instance.logo_url
+
+        return data
+
     def get_is_user_joined(self, obj):
         """Check if the current user is in a BetLeague with this league"""
         request = self.context.get('request')
@@ -45,3 +53,11 @@ class TeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
         fields = ('name', 'badge', 'slug', 'acronym')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        if not data['badge']:
+            data['badge'] = instance.badge_url
+
+        return data
