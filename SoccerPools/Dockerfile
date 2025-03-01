@@ -20,6 +20,8 @@ COPY requirements.txt /app/
 
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
+COPY soccerpools-firebase-adminsdk.json /app/soccerpools-firebase-adminsdk.json
+
 COPY . /app/
 
 RUN python manage.py collectstatic --noinput

@@ -46,6 +46,7 @@ LOCAL_APPS = [
     'apps.app_user',
     'apps.league',
     'apps.match',
+    'apps.notification',
     'apps.tournament',
 ]
 

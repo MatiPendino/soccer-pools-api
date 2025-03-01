@@ -1,9 +1,11 @@
 from celery import shared_task
 from decouple import config
+from sentry_sdk import capture_message
 import requests
 import json
 from django.db import transaction
 from django.utils.timezone import now, timedelta
+from apps.notification.utils import send_push_nots_match
 from .models import Match, MatchResult
 from .utils import get_match_result_points
 
@@ -33,7 +35,10 @@ def finalize_matches():
         FINALIZED and update the match result points
     """
     TIMEZONE = 'America/Argentina/Ushuaia'
-    pending_matches = Match.objects.filter(state=True, match_state=Match.PENDING_MATCH)
+    pending_matches = Match.objects.filter(
+        state=True, 
+        match_state=Match.PENDING_MATCH
+    ).select_related('round__league', 'team_1', 'team_2')
     url = f'https://v3.football.api-sports.io/fixtures?&timezone={TIMEZONE}'
     headers = {
         'x-apisports-key': config('API_FOOTBALL_KEY')
@@ -50,6 +55,17 @@ def finalize_matches():
             long = fixture_status.get('long')
 
             if long == 'Match Finished':
+                try:
+                    # Send push notifications to inform about the finalized match
+                    send_push_nots_match(
+                        team_1_name=match.team_1.name, 
+                        team_2_name=match.team_2.name, 
+                        goals_home=goals_home, 
+                        goals_away=goals_away, 
+                        league=match.round.league
+                    )
+                except Exception as err:
+                    capture_message(f'Error sending push nots: {str(err)}', level="error")
                 original_match_result, was_created = MatchResult.objects.get_or_create(
                     original_result=True,
                     match=match,
