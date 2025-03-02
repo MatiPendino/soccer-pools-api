@@ -134,8 +134,7 @@ DJOSER = {
 SPECTACULAR_SETTINGS = {
     'TITLE': 'SoccerPools API',
     'DESCRIPTION': 'API for SoccerPools project',
-    'VERSION': '1.0.0',
-    #'SERVE_INCLUDE_SCHEMA': False,
+    'VERSION': '1.4.0',
 }
 
 AUTHENTICATION_BACKENDS = (
