@@ -1,7 +1,9 @@
 import os
 from celery import Celery
+from utils import get_settings_env
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'SoccerPools.settings.local')
+settings_env = get_settings_env()
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_env)
 
 app = Celery('SoccerPools')
 

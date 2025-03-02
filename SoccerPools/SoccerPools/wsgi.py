@@ -8,9 +8,11 @@ https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/
 """
 
 import os
+from utils import get_settings_env
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'SoccerPools.settings.local')
+settings_env = get_settings_env()
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_env)
 
 application = get_wsgi_application()

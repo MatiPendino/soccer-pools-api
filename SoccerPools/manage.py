@@ -2,11 +2,12 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-
+from utils import get_settings_env
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'SoccerPools.settings.local')
+    settings_env = get_settings_env()
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_env)
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
