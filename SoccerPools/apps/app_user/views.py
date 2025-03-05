@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.utils.text import slugify
 from apps.bet.models import BetRound, BetLeague
@@ -24,9 +25,7 @@ class UserRegister(APIView):
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             user = serializer.create(request.data)
-            if user:
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
             
 
 class UserLogin(APIView):
@@ -67,7 +66,7 @@ class UserDestroyApiView(APIView):
         if user:
             user.remove_user()
             return Response({'success': 'User removed successfully'}, status=status.HTTP_204_NO_CONTENT)
-        return Response({'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+        raise AppUser.DoesNotExist 
 
 
 class UserInLeague(APIView):
@@ -91,14 +90,11 @@ class LeagueUser(APIView):
     def get(self, request):
         """Gets the League based on the User"""
         user = request.user
-        try:
-            bet_league = BetLeague.objects.get_last_visited_bet_league(user)
-            league = bet_league.league
-            league_serializer = LeagueSerializer(league)
+        bet_league = BetLeague.objects.get_last_visited_bet_league(user)
+        league = bet_league.league
+        league_serializer = LeagueSerializer(league)
 
-            return Response(league_serializer.data)
-        except Exception as err:
-            return Response({'error': str(err)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(league_serializer.data)
 
 
 class GoogleLoginView(APIView):
@@ -107,14 +103,14 @@ class GoogleLoginView(APIView):
     def post(self, request):
         access_token = request.data.get("accessToken")
         if not access_token:
-            return Response({"error": "Access token is required"}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError('Access token is required')
 
         user_info_url = "https://www.googleapis.com/userinfo/v2/me"
         headers = {"Authorization": f"Bearer {access_token}"}
         user_info_response = requests.get(user_info_url, headers=headers)
 
         if user_info_response.status_code != status.HTTP_200_OK:
-            return Response({"error": "Failed to retrieve user info"}, status=user_info_response.status_code)
+            raise ValidationError('Failed to retrieve user info')
 
         user_info = user_info_response.json()
         email = user_info.get("email")

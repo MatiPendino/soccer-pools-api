@@ -16,34 +16,32 @@ class TournamentViewSet(viewsets.ModelViewSet):
     queryset = Tournament.objects.all()
 
     def create(self, request):
-        try:
-            with transaction.atomic(): 
-                user = request.user
-                data = copy.copy(request.data)
-                data['admin_tournament'] = user.id
-                data['league'] = int(data['league'])
-                # If the user does not select a logo, the default logo will be selected
-                # In case of an error the logo will be None
-                if data['logo'] == 'null':
-                    try:
-                        default_logo = generate_default_logo()
-                        data['logo'] = default_logo
-                    except Exception as e:
-                        data['logo'] = None
-                serializer = self.get_serializer(data=data)
-                serializer.is_valid(raise_exception=True)
-                self.perform_create(serializer)
+        with transaction.atomic(): 
+            user = request.user
+            data = copy.copy(request.data)
+            data['admin_tournament'] = user.id
+            data['league'] = int(data['league'])
+            # If the user does not select a logo, the default logo will be selected
+            # In case of an error the logo will be None
+            if data['logo'] == 'null':
+                try:
+                    default_logo = generate_default_logo()
+                    data['logo'] = default_logo
+                except Exception as e:
+                    data['logo'] = None
 
-                tournament = Tournament.objects.filter(admin_tournament=user).last()
-                TournamentUser.objects.create(
-                    tournament=tournament,
-                    user=user,
-                    tournament_user_state=TournamentUser.ACCEPTED
-                )
-                headers = self.get_success_headers(serializer.data)
-                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        except Exception as err:
-            return Response(str(err), status=status.HTTP_400_BAD_REQUEST)
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+
+            tournament = Tournament.objects.filter(admin_tournament=user).last()
+            TournamentUser.objects.create(
+                tournament=tournament,
+                user=user,
+                tournament_user_state=TournamentUser.ACCEPTED
+            )
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def list(self, request):
         """
