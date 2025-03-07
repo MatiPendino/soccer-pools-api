@@ -184,13 +184,14 @@ class UpcomingMatchesTest(TestCase):
 
     def test_update_matches_state(self):
         """Test that not started matches with start date within 20 minutes change its state"""
-        upcoming_matches = check_upcoming_matches()
+        check_upcoming_matches()
         self.match_1.refresh_from_db()
         self.match_2.refresh_from_db()
         self.match_3.refresh_from_db()
         self.match_4.refresh_from_db()
-        self.assertEqual(upcoming_matches.count(), 2)
         self.assertEqual(self.match_1.match_state, Match.PENDING_MATCH)
+        self.assertEqual(self.match_2.match_state, Match.NOT_STARTED_MATCH)
+        self.assertEqual(self.match_3.match_state, Match.PENDING_MATCH)
         self.assertEqual(self.match_4.match_state, Match.PENDING_MATCH)
 
 

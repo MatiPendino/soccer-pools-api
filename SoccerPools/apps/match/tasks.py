@@ -26,8 +26,6 @@ def check_upcoming_matches():
         c_match.match_state = Match.PENDING_MATCH
         c_match.save()
 
-    return matches
-
 
 @shared_task
 def finalize_matches():

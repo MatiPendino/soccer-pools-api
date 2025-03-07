@@ -14,5 +14,3 @@ def check_upcoming_rounds():
     for round in rounds:
         round.round_state = Round.PENDING_ROUND
         round.save()
-        
-    return rounds

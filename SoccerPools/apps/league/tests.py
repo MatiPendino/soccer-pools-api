@@ -48,14 +48,13 @@ class UpcomingRoundsTest(TestCase):
 
     def test_upcoming_rounds(self):
         """Test that rounds change its state to pending"""
-        upcoming_rounds = check_upcoming_rounds()
+        check_upcoming_rounds()
 
         self.round_1.refresh_from_db()
         self.round_2.refresh_from_db()
         self.round_3.refresh_from_db()
         self.round_4.refresh_from_db()
 
-        self.assertEqual(upcoming_rounds.count(), 2)
         self.assertEqual(self.round_1.round_state, Round.PENDING_ROUND)
         self.assertEqual(self.round_2.round_state, Round.NOT_STARTED_ROUND)
         self.assertEqual(self.round_3.round_state, Round.PENDING_ROUND)
