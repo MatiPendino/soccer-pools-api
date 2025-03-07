@@ -14,4 +14,5 @@ def check_upcoming_rounds():
     for round in rounds:
         round.round_state = Round.PENDING_ROUND
         round.save()
-        print(f"Upcoming event: {round.name} starts at {round.start_date}")
+        
+    return rounds

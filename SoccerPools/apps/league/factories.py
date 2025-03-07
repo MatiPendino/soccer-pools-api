@@ -17,6 +17,7 @@ class RoundFactory(factory.django.DjangoModelFactory):
     round_state = Round.NOT_STARTED_ROUND
     league = factory.SubFactory(LeagueFactory)
     is_general_round = False
+    start_date = None
 
 
 class TeamFactory(factory.django.DjangoModelFactory):

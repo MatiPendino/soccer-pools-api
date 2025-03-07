@@ -6,8 +6,8 @@ import json
 from django.db import transaction
 from django.utils.timezone import now, timedelta
 from apps.notification.utils import send_push_nots_match
-from .models import Match, MatchResult
-from .utils import get_match_result_points
+from apps.match.models import Match, MatchResult
+from apps.match.utils import get_match_result_points
 
 @shared_task
 def check_upcoming_matches():
@@ -25,7 +25,8 @@ def check_upcoming_matches():
     for c_match in matches:
         c_match.match_state = Match.PENDING_MATCH
         c_match.save()
-        print(f"Upcoming match: {c_match} starts at {c_match.start_date}")
+
+    return matches
 
 
 @shared_task
