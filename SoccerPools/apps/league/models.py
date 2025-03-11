@@ -56,6 +56,7 @@ class Team(BaseModel):
     badge = models.ImageField('Badge of the team', upload_to='league', null=True, blank=True)
     badge_url = models.URLField(null=True, blank=True)
     league = models.ForeignKey(League, on_delete=models.CASCADE)
+    leagues = models.ManyToManyField(League, related_name='teams')
     api_team_id = models.PositiveIntegerField(unique=True, blank=True, null=True)
 
     def __str__(self):

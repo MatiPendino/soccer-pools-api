@@ -37,13 +37,13 @@ class TeamResources(resources.ModelResource):
         model = Team
 
 class TeamAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    search_fields = ('name', 'slug', 'league__name')
-    list_display = ('name', 'get_league_name', 'slug')
+    search_fields = ('name', 'slug', 'leagues__name')
+    list_display = ('name', 'get_league_names', 'slug')
     resource_class = TeamResources
 
-    def get_league_name(self, obj):
-        return obj.league.name
-    get_league_name.admin_order_field = 'league__name'
-    get_league_name.short_description = 'League'
+    def get_league_names(self, obj):
+        return f'{", ".join([league.name for league in obj.leagues.all()])}'
+    get_league_names.admin_order_field = 'leagues__name'
+    get_league_names.short_description = 'Leagues'
 
 admin.site.register(Team, TeamAdmin)
