@@ -26,3 +26,10 @@ class TeamFactory(factory.django.DjangoModelFactory):
 
     name = factory.Faker('word')
     league = factory.SubFactory(LeagueFactory)
+    @factory.post_generation
+    def leagues(self, create, extracted, **kwargs):
+        if not create:
+            return
+        
+        if extracted:
+            self.leagues.set(extracted)

@@ -60,7 +60,7 @@ class Team(BaseModel):
     api_team_id = models.PositiveIntegerField(unique=True, blank=True, null=True)
 
     def __str__(self):
-        return f'{self.name} - {self.league}'
+        return f'{self.name} - {self.api_team_id}'
     
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)

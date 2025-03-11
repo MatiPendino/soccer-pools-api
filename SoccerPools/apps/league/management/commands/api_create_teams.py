@@ -42,6 +42,7 @@ class Command(BaseCommand):
                     'league': league
                 }
             )
+            team.leagues.add(league)
             number_created_records += 1 if was_created else 0
 
         print(f'{number_created_records} created records')

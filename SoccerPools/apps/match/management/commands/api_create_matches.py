@@ -48,8 +48,8 @@ class Command(BaseCommand):
 
             if short in ['TBD', 'NS']:
                 round = get_object_or_404(Round, state=True, league=league, api_round_name=round)
-                team_1 = get_object_or_404(Team, state=True, league=league, api_team_id=home_id)
-                team_2 = get_object_or_404(Team, state=True, league=league, api_team_id=away_id)
+                team_1 = get_object_or_404(Team, state=True, leagues=league, api_team_id=home_id)
+                team_2 = get_object_or_404(Team, state=True, leagues=league, api_team_id=away_id)
 
                 Match.objects.get_or_create(
                     round=round,
