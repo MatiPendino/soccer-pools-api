@@ -26,9 +26,9 @@ class MatchResultsListCreateTest(APITestCase):
 
         self.league = LeagueFactory()
         self.round = RoundFactory(league=self.league)
-        self.team_1 = TeamFactory(league=self.league, leagues=[self.league], name='Rosario Central')
-        self.team_2 = TeamFactory(league=self.league, leagues=[self.league], name='NOB')
-        self.team_3 = TeamFactory(league=self.league, leagues=[self.league], name='River Plate')
+        self.team_1 = TeamFactory(leagues=[self.league], name='Rosario Central')
+        self.team_2 = TeamFactory(leagues=[self.league], name='NOB')
+        self.team_3 = TeamFactory(leagues=[self.league], name='River Plate')
         self.bet_league = BetLeagueFactory(league=self.league, user=self.user)
         self.bet_round = BetRoundFactory(round=self.round, bet_league=self.bet_league)
         self.match_1 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
@@ -59,9 +59,9 @@ class MatchResultsUpdateTest(APITestCase):
 
         self.league = LeagueFactory()
         self.round = RoundFactory(league=self.league)
-        self.team_1 = TeamFactory(league=self.league, leagues=[self.league], name='Rosario Central')
-        self.team_2 = TeamFactory(league=self.league, leagues=[self.league], name='NOB')
-        self.team_3 = TeamFactory(league=self.league, leagues=[self.league], name='River Plate')
+        self.team_1 = TeamFactory(leagues=[self.league], name='Rosario Central')
+        self.team_2 = TeamFactory(leagues=[self.league], name='NOB')
+        self.team_3 = TeamFactory(leagues=[self.league], name='River Plate')
         self.bet_league = BetLeagueFactory(league=self.league, user=self.user)
         self.bet_round = BetRoundFactory(round=self.round, bet_league=self.bet_league)
         self.match_1 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
@@ -115,8 +115,8 @@ class MatchResultOriginalTest(APITestCase):
 
         self.league = LeagueFactory()
         self.round = RoundFactory(league=self.league)
-        self.team_1 = TeamFactory(league=self.league, leagues=[self.league], name='Rosario Central')
-        self.team_2 = TeamFactory(league=self.league, leagues=[self.league], name='NOB')
+        self.team_1 = TeamFactory(leagues=[self.league], name='Rosario Central')
+        self.team_2 = TeamFactory(leagues=[self.league], name='NOB')
         self.bet_league = BetLeagueFactory(league=self.league, user=self.user)
         self.bet_round = BetRoundFactory(bet_league=self.bet_league, round=self.round)
         self.match = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
@@ -148,10 +148,10 @@ class MatchResultOriginalTest(APITestCase):
 class UpcomingMatchesTest(TestCase):
     def setUp(self):
         self.league = LeagueFactory()
-        self.team_1 = TeamFactory(league=self.league, leagues=[self.league])
-        self.team_2 = TeamFactory(league=self.league, leagues=[self.league])
-        self.team_3 = TeamFactory(league=self.league, leagues=[self.league])
-        self.team_4 = TeamFactory(league=self.league, leagues=[self.league])
+        self.team_1 = TeamFactory(leagues=[self.league])
+        self.team_2 = TeamFactory(leagues=[self.league])
+        self.team_3 = TeamFactory(leagues=[self.league])
+        self.team_4 = TeamFactory(leagues=[self.league])
         self.round = RoundFactory(league=self.league)
         self.match_1 = MatchFactory(
             team_1=self.team_1, 
@@ -198,10 +198,10 @@ class UpcomingMatchesTest(TestCase):
 class FinalizeMatchesTest(TestCase):
     def setUp(self):
         self.league = LeagueFactory(name='Finalize Testing')
-        self.team_1 = TeamFactory(league=self.league, leagues=[self.league])
-        self.team_2 = TeamFactory(league=self.league, leagues=[self.league])
-        self.team_3 = TeamFactory(league=self.league, leagues=[self.league])
-        self.team_4 = TeamFactory(league=self.league, leagues=[self.league])
+        self.team_1 = TeamFactory(leagues=[self.league])
+        self.team_2 = TeamFactory(leagues=[self.league])
+        self.team_3 = TeamFactory(leagues=[self.league])
+        self.team_4 = TeamFactory(leagues=[self.league])
         self.round = RoundFactory(league=self.league)
         self.match_1 = MatchFactory(
             team_1=self.team_1, 

@@ -119,8 +119,8 @@ class UserInLeagueTest(APITestCase):
         self.user = AppUserFactory(email='user@gmail.com')
         self.league = LeagueFactory()
         self.round = RoundFactory(league=self.league)
-        self.team_1 = TeamFactory(leagues=[self.league], league=self.league, name='Rosario Central')
-        self.team_2 = TeamFactory(leagues=[self.league], league=self.league, name='NOB')
+        self.team_1 = TeamFactory(leagues=[self.league], name='Rosario Central')
+        self.team_2 = TeamFactory(leagues=[self.league], name='NOB')
         self.url = f'/api/user/user_in_league/'
 
     def test_user_in_league(self):
@@ -145,8 +145,8 @@ class LeagueUserTest(APITestCase):
         self.league = LeagueFactory(name='Liga Argentina')
         self.league_2 = LeagueFactory(name='Liga Chilena')
         self.round = RoundFactory(league=self.league)
-        self.team_1 = TeamFactory(leagues=[self.league], league=self.league, name='Rosario Central')
-        self.team_2 = TeamFactory(leagues=[self.league], league=self.league, name='NOB')
+        self.team_1 = TeamFactory(leagues=[self.league], name='Rosario Central')
+        self.team_2 = TeamFactory(leagues=[self.league], name='NOB')
         self.url = f'/api/user/user_league/'
 
     def test_user_league_last_visited(self):
@@ -188,10 +188,10 @@ class RemoveUserSetUp(APITestCase):
         )
         self.league = LeagueFactory()
         self.round = RoundFactory(league=self.league)
-        self.team_1 = TeamFactory(name='Team 1', league=self.league, leagues=[self.league])
-        self.team_2 = TeamFactory(name='Team 2', league=self.league, leagues=[self.league])
-        self.team_3 = TeamFactory(name='Team 3', league=self.league, leagues=[self.league])
-        self.team_4 = TeamFactory(name='Team 4', league=self.league, leagues=[self.league])
+        self.team_1 = TeamFactory(name='Team 1', leagues=[self.league])
+        self.team_2 = TeamFactory(name='Team 2', leagues=[self.league])
+        self.team_3 = TeamFactory(name='Team 3', leagues=[self.league])
+        self.team_4 = TeamFactory(name='Team 4', leagues=[self.league])
         self.match_1 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
         self.match_2 = MatchFactory(round=self.round, team_1=self.team_3, team_2=self.team_4)
         self.bet_league = BetLeagueFactory(user=self.user, league=self.league)

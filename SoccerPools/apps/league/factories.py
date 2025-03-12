@@ -25,7 +25,6 @@ class TeamFactory(factory.django.DjangoModelFactory):
         model = Team
 
     name = factory.Faker('word')
-    league = factory.SubFactory(LeagueFactory)
     @factory.post_generation
     def leagues(self, create, extracted, **kwargs):
         if not create:

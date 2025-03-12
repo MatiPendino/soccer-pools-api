@@ -38,8 +38,7 @@ class Command(BaseCommand):
                 defaults={
                     'name': name,
                     'acronym': code,
-                    'badge_url': logo_url,
-                    'league': league
+                    'badge_url': logo_url
                 }
             )
             team.leagues.add(league)
