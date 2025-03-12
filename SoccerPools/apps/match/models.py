@@ -16,9 +16,9 @@ class Match(BaseModel):
         (CANCELLED_MATCH, 'Cancelled')
     )
 
-    team_1 = models.ForeignKey(Team, related_name='team_1', on_delete=models.CASCADE)
-    team_2 = models.ForeignKey(Team, related_name='team_2', on_delete=models.CASCADE)
-    round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    team_1 = models.ForeignKey(Team, related_name='matches_team_1', on_delete=models.CASCADE)
+    team_2 = models.ForeignKey(Team, related_name='matches_team_2', on_delete=models.CASCADE)
+    round = models.ForeignKey(Round, related_name='matches', on_delete=models.CASCADE)
     start_date = models.DateTimeField('Start date of the match', blank=True, null=True)
     match_state = models.PositiveSmallIntegerField('State of the match', default=0, choices=STATE_CODES)
     api_match_id = models.PositiveIntegerField(unique=True, null=True, blank=True)
