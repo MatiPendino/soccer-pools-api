@@ -48,6 +48,11 @@ class Round(BaseModel):
         self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
+    def update_start_date(self):
+        match_earliest_start_date = self.matches.order_by('start_date').first()
+        self.start_date = match_earliest_start_date.start_date
+        self.save()
+
 
 class Team(BaseModel):
     name = models.CharField(max_length=150)

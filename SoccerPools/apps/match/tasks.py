@@ -1,11 +1,14 @@
 from celery import shared_task
 from decouple import config
 from sentry_sdk import capture_message
+from dateutil import parser
 import requests
 import json
 from django.db import transaction
 from django.utils.timezone import now, timedelta
+from django.utils.timezone import localtime
 from apps.notification.utils import send_push_nots_match
+from apps.league.models import Round
 from apps.match.models import Match, MatchResult
 from apps.match.utils import get_match_result_points
 
@@ -90,3 +93,43 @@ def finalize_matches():
                         match_result.save()
                     match.match_state = Match.FINALIZED_MATCH
                     match.save()
+
+
+@shared_task
+def update_matches_start_date():
+    """
+        Update any changes in the NOT_STARTED matches start dates and update 
+        Round start_date based on this
+    """
+    TIMEZONE = 'America/Argentina/Ushuaia'
+
+    # Not started matches that would start in up to 1 month
+    up_to_one_month = now() + timedelta(days=30)
+    matches = Match.objects.filter(
+        state=True,
+        match_state=Match.NOT_STARTED_MATCH,
+        start_date__lte=up_to_one_month,
+        start_date__gte=now(),
+    )
+
+    url = f'https://v3.football.api-sports.io/fixtures?timezone={TIMEZONE}'
+    for match in matches:
+        url += f'&id={match.api_match_id}'
+        headers = {
+            'x-apisports-key': config('API_FOOTBALL_KEY')
+        }
+        response = requests.get(url, headers=headers)
+        response_obj = json.loads(response.text)
+
+        match_response = response_obj.get('response')[0]
+        fixture_data = match_response.get('fixture')
+        start_date = parser.parse(fixture_data.get('date'))
+        match_start_date = localtime(match.start_date)
+        
+        if start_date != match_start_date:
+            match.start_date = start_date
+            match.save()
+
+    rounds = Round.objects.filter(matches__in=matches).distinct()
+    for round in rounds:
+        round.update_start_date()

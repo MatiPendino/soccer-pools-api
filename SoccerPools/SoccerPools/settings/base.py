@@ -210,6 +210,7 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'America/Argentina/Buenos_Aires'
+CELERY_TIMEZONE = TIME_ZONE  # Force Celery to use the same timezone
 
 USE_I18N = True
 
