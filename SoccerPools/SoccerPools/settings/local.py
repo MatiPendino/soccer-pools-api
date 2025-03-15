@@ -19,3 +19,12 @@ DATABASES = {
     }
 }
 
+# Run Celery tasks immediately (eager mode)
+CELERY_TASK_ALWAYS_EAGER = True
+
+# Propagate errors to Django when tasks fail
+CELERY_TASK_EAGER_PROPAGATES = True
+
+
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
