@@ -36,8 +36,20 @@ class MatchResultsUpdateApiView(APIView):
         for result_data in match_results_data:
             match_result = match_result_map.get(result_data['id'])
             if match_result:
-                match_result.goals_team_1 = result_data['goals_team_1']
-                match_result.goals_team_2 = result_data['goals_team_2']
+                goals_team_1 = result_data['goals_team_1']
+                goals_team_2 = result_data['goals_team_2']
+
+                # In the case one of the team scores is an Integer and the other None,
+                # the latter will be set to 0
+                if type(goals_team_1) == int and type(goals_team_2) == int:
+                    match_result.goals_team_1 = goals_team_1
+                    match_result.goals_team_2 = goals_team_2
+                elif type(goals_team_1) == int and not goals_team_2:
+                    match_result.goals_team_1 = goals_team_1
+                    match_result.goals_team_2 = 0
+                elif type(goals_team_2) == int and not goals_team_1:
+                    match_result.goals_team_1 = 0
+                    match_result.goals_team_2 = goals_team_2
 
         MatchResult.objects.bulk_update(match_results, ['goals_team_1', 'goals_team_2'])
 

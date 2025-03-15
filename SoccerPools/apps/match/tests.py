@@ -255,6 +255,11 @@ class FinalizeMatchesTest(TestCase):
             bet_round=self.bet_round_2,
             match=self.match_2
         )
+        self.match_result_5 = MatchResultFactory(
+            goals_team_1=2, goals_team_2=None,
+            bet_round=self.bet_round_2,
+            match=self.match_2
+        )
 
     @patch('apps.match.tasks.requests.get')
     def test_finalize_matches(self, mock_requests_get):
@@ -293,6 +298,7 @@ class FinalizeMatchesTest(TestCase):
         self.match_result_2.refresh_from_db()
         self.match_result_3.refresh_from_db()
         self.match_result_4.refresh_from_db()
+        self.match_result_5.refresh_from_db()
 
         original_match_result = MatchResult.objects.filter(original_result=True)
         self.assertTrue(original_match_result.exists())
@@ -301,3 +307,4 @@ class FinalizeMatchesTest(TestCase):
         self.assertEqual(self.match_result_2.points, 0)
         self.assertEqual(self.match_result_3.points, 1)
         self.assertEqual(self.match_result_4.points, 0)
+        self.assertEqual(self.match_result_5.points, 0)

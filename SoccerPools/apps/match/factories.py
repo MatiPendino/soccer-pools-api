@@ -18,8 +18,8 @@ class MatchResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = MatchResult
 
-    goals_team_1 = 0
-    goals_team_2 = 0
+    goals_team_1 = None
+    goals_team_2 = None
     bet_round = factory.SubFactory(BetRoundFactory)
     match = factory.SubFactory(MatchFactory)
     points = 0

@@ -41,8 +41,8 @@ class Match(BaseModel):
 
 
 class MatchResult(BaseModel):
-    goals_team_1 = models.PositiveSmallIntegerField(default=0)
-    goals_team_2 = models.PositiveSmallIntegerField(default=0)
+    goals_team_1 = models.PositiveSmallIntegerField(null=True, blank=True)
+    goals_team_2 = models.PositiveSmallIntegerField(null=True, blank=True)
     original_result = models.BooleanField('Original result', default=False)
     bet_round = models.ForeignKey(BetRound, related_name='match_results', on_delete=models.SET_NULL, null=True, blank=True)
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
@@ -54,4 +54,4 @@ class MatchResult(BaseModel):
     
     class Meta:
         verbose_name = 'Match Result'
-        verbose_name_plural = 'Matches results'
+        verbose_name_plural = 'Match results'
