@@ -5,6 +5,7 @@ from dateutil import parser
 import requests
 import json
 from django.db import transaction
+from django.db.models import Q
 from django.utils.timezone import now, timedelta
 from django.utils.timezone import localtime
 from apps.notification.utils import send_push_nots_match
@@ -103,13 +104,13 @@ def update_matches_start_date():
     """
     TIMEZONE = 'America/Argentina/Ushuaia'
 
-    # Not started matches that would start in up to 1 month
+    # Not started matches with None start_date or that would start in up to 1 month
     up_to_one_month = now() + timedelta(days=30)
     matches = Match.objects.filter(
+        Q(start_date__lte=up_to_one_month, start_date__gte=now()) |
+        Q(start_date__isnull=True),
         state=True,
         match_state=Match.NOT_STARTED_MATCH,
-        start_date__lte=up_to_one_month,
-        start_date__gte=now(),
     )
 
     url = f'https://v3.football.api-sports.io/fixtures?timezone={TIMEZONE}'

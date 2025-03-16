@@ -9,7 +9,7 @@ from apps.bet.factories import BetRoundFactory, BetLeagueFactory
 from apps.match.models import MatchResult, Match
 from apps.match.serializers import MatchResultSerializer
 from .factories import MatchResultFactory, MatchFactory
-from .tasks import check_upcoming_matches, finalize_matches
+from .tasks import check_upcoming_matches, finalize_matches, update_matches_start_date
 
 User = get_user_model()
 class MatchResultsListCreateTest(APITestCase):
@@ -308,3 +308,82 @@ class FinalizeMatchesTest(TestCase):
         self.assertEqual(self.match_result_3.points, 1)
         self.assertEqual(self.match_result_4.points, 0)
         self.assertEqual(self.match_result_5.points, 0)
+
+
+class UpdateMatchesStartDate(TestCase):
+    def setUp(self):
+        self.tomorrow = now() + timedelta(days=1)
+        self.in_12_hs = now() + timedelta(hours=12)
+        self.two_hs_less = now() - timedelta(hours=2)
+        self.league = LeagueFactory(slug='Update Matches')
+        self.round = RoundFactory(league=self.league, start_date=self.tomorrow)
+        self.team_1 = TeamFactory(leagues=[self.league])
+        self.team_2 = TeamFactory(leagues=[self.league])
+        self.team_3 = TeamFactory(leagues=[self.league])
+        self.team_4 = TeamFactory(leagues=[self.league])
+        self.match_1 = MatchFactory(
+            round=self.round, 
+            team_1=self.team_1, 
+            team_2=self.team_2, 
+            start_date=None,
+            match_state=Match.NOT_STARTED_MATCH
+        )
+        self.match_2 = MatchFactory(
+            round=self.round, 
+            team_1=self.team_3, 
+            team_2=self.team_4,
+            start_date=self.in_12_hs,
+            match_state=Match.NOT_STARTED_MATCH
+        )
+        self.match_3 = MatchFactory(
+            round=self.round,
+            team_1=self.team_1,
+            team_2=self.team_3,
+            start_date=self.two_hs_less,
+            match_state=Match.NOT_STARTED_MATCH
+        )
+        self.match_4 = MatchFactory(
+            round=self.round,
+            team_1=self.team_2,
+            team_2=self.team_4,
+            start_date=self.in_12_hs,
+            match_state=Match.PENDING_MATCH
+        )
+
+    @patch('apps.match.tasks.requests.get')
+    def test_update_matches_start_date(self, mock_requests_get):
+        """
+            Test that matches start dates and round start dates are updated successfully
+        """
+        new_start_date = now() + timedelta(hours=6)
+        
+        # Create a mock API response
+        fake_api_response = f"""{{
+            "response": [{{
+                "fixture": {{"date": "{new_start_date}"}} 
+            }}]
+        }}"""
+
+        # Configure the mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.get.return_value.text = fake_api_response
+        mock_requests_get.return_value.text = fake_api_response 
+
+        update_matches_start_date()
+
+        # Debugging: Check if the mock was called
+        mock_requests_get.assert_called()
+
+        # Refresh all instances
+        self.match_1.refresh_from_db()
+        self.match_2.refresh_from_db()
+        self.match_3.refresh_from_db()
+        self.match_4.refresh_from_db()
+        self.round.refresh_from_db()
+
+        self.assertEqual(self.match_2.start_date, new_start_date)
+        self.assertEqual(self.match_3.start_date, self.two_hs_less)
+        self.assertEqual(self.round.start_date, self.two_hs_less)
+        self.assertEqual(self.match_1.start_date, new_start_date)
+        self.assertEqual(self.match_4.start_date, self.in_12_hs)
