@@ -7,7 +7,7 @@ class LeagueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = League
-        fields = ('id', 'name', 'slug', 'logo', 'is_user_joined')
+        fields = ('id', 'name', 'slug', 'logo', 'continent', 'is_user_joined')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

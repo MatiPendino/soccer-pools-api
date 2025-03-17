@@ -4,10 +4,25 @@ from apps.base.models import BaseModel
 
 
 class League(BaseModel):
+    AMERICAS = 0
+    EUROPE = 1
+    AFRICA = 2
+    ASIA = 3
+    OCEANIA = 4
+    TOURNAMENTS = 5
+    LEAGUE_CONTINENTS = (
+        (AMERICAS, 'Americas'),
+        (EUROPE, 'Europe'),
+        (AFRICA, 'Africa'),
+        (ASIA, 'Asia'),
+        (OCEANIA, 'Oceania'),
+        (TOURNAMENTS, 'Tournaments'),
+    )
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, null=True, blank=True)
     logo = models.ImageField('Logo of the league', upload_to='league', blank=True, null=True)
     logo_url = models.URLField(blank=True, null=True)
+    continent = models.PositiveSmallIntegerField(default=0, choices=LEAGUE_CONTINENTS)
     api_league_id = models.PositiveIntegerField(unique=True, blank=True, null=True)
 
     def __str__(self):

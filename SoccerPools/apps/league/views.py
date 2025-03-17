@@ -4,7 +4,19 @@ from .models import League, Round, Team
 
 class LeagueListApiView(generics.ListAPIView):
     serializer_class = LeagueSerializer
-    queryset = League.objects.filter(state=True)
+
+    def get_queryset(self):
+        continent = self.request.query_params.get('continent')
+        if continent != 'undefined':
+            continent = int(continent)
+        leagues = League.objects.filter(state=True)
+        if continent in [
+            League.AMERICAS, League.AFRICA, League.EUROPE, League.ASIA, League.OCEANIA, 
+            League.TOURNAMENTS
+        ]:
+            leagues = leagues.filter(continent=continent)
+
+        return leagues
 
     def get_serializer_context(self):
         """Pass request context so we can access the user in the serializer."""
