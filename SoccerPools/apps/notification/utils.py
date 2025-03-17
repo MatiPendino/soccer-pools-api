@@ -40,8 +40,11 @@ def send_push_nots_match(team_1_name, team_2_name, goals_home, goals_away, leagu
     )
     fcm = get_fcm_object()
     for fcm_token in fcm_tokens:
-        result = fcm.notify(
-            fcm_token=fcm_token.token_id, 
-            notification_title=notification_title, 
-            notification_body=notification_body
-        )
+        try:
+            result = fcm.notify(
+                fcm_token=fcm_token.token_id, 
+                notification_title=notification_title, 
+                notification_body=notification_body
+            )
+        except:
+            pass
