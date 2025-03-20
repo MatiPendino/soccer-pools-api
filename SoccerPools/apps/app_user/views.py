@@ -11,8 +11,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
-from django.utils.text import slugify
-from apps.bet.models import BetRound, BetLeague
+from utils import generate_unique_field_value
+from apps.bet.models import BetLeague
 from apps.league.serializers import LeagueSerializer
 from .models import AppUser
 from .serializers import UserLoginSerializer, UserRegisterSerializer, UserSerializer
@@ -122,7 +122,7 @@ class GoogleLoginView(APIView):
         user, created = AppUser.objects.get_or_create(
             email=email, 
             defaults={
-                'username': slugify(full_name), 
+                'username': generate_unique_field_value(AppUser, 'username', full_name), 
                 'name': first_name, 
                 'last_name': last_name,
             }

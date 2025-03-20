@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.text import slugify
+from utils import generate_unique_field_value
 from apps.base.models import BaseModel
 
 
@@ -29,7 +29,8 @@ class League(BaseModel):
         return self.name
     
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
+        if not self.slug:
+            self.slug = generate_unique_field_value(League, 'slug', self.name)
         super().save(*args, **kwargs)
     
 
@@ -60,7 +61,8 @@ class Round(BaseModel):
         return f'{self.name} - {self.league}'
     
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
+        if not self.slug:
+            self.slug = generate_unique_field_value(Round, 'slug', self.name)
         super().save(*args, **kwargs)
 
     def update_start_date(self):
@@ -82,7 +84,8 @@ class Team(BaseModel):
         return f'{self.name} - {self.api_team_id}'
     
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
+        if not self.slug:
+            self.slug = generate_unique_field_value(Team, 'slug', self.name)
         super().save(*args, **kwargs)
     
 
