@@ -14,8 +14,6 @@ class Command(BaseCommand):
         league_id = options.get('league_id')
         season = options.get('season')
 
-        league = get_object_or_404(League, api_league_id=league_id)
-
         url = f'https://v3.football.api-sports.io/teams?league={league_id}&season={season}'
         headers = {
             'x-apisports-key': config('API_FOOTBALL_KEY')
