@@ -36,4 +36,12 @@ class Command(BaseCommand):
             )
             n_created_rounds += 1
 
+        Round.objects.create( # General Round creation
+            league=league,
+            number_round=0,
+            name='General',
+            is_general_round=True
+        )
+        n_created_rounds += 1
+
         print(f'{n_created_rounds} new Rounds created for {league}')
