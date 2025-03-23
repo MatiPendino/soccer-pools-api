@@ -59,6 +59,7 @@ THIRD_APPS = [
     'drf_spectacular',
     'django_celery_beat',
     'storages',
+    'anymail',
 ]
 
 INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_APPS 
@@ -105,6 +106,15 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'utils.custom_exception_handler',
 }
 
+# Email backend
+EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
+DEFAULT_FROM_EMAIL = config('FROM_EMAIL')
+
+ANYMAIL = {
+    "MAILGUN_API_KEY": config('MAILGUN_KEY'),
+    "MAILGUN_SENDER_DOMAIN": config('SENDER_DOMAIN'),  
+}
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
@@ -119,7 +129,8 @@ DJOSER = {
     'USERNAME_CHANGED_EMAIL_CONFIRMATION': False,
     'PASSWORD_CHANGED_EMAIL_CONFIRMATION': False,
     'SEND_CONFIRMATION_EMAIL': False,
-    'ACTIVATION_URL': 'activate/{uid}/{token}',
+    'SEND_ACTIVATION_EMAIL': True,
+    'ACTIVATION_URL': 'api/user/activate/{uid}/{token}',
     'SERIALIZERS': {
         'user_create': 'apps.app_user.serializers.UserRegisterSerializer'
     },
