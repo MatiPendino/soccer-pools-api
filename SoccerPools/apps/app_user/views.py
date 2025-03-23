@@ -1,6 +1,5 @@
 import requests
-from django.contrib.auth import login, logout, authenticate
-from django.shortcuts import render
+from decouple import config
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
@@ -11,6 +10,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import login, logout, authenticate
+from django.shortcuts import render
 from utils import generate_unique_field_value
 from apps.bet.models import BetLeague
 from apps.league.serializers import LeagueSerializer
@@ -157,3 +159,16 @@ def remove_user(request):
             return render(request, 'app_user/remove_user.html', {'message': 'Credentials are not correct'})
 
     return render(request, 'app_user/remove_user.html')
+
+
+@csrf_exempt
+def activate_user(request, uid, token):
+    response = requests.post(f'{config("BACKEND_URL")}/api/users/activation/', data={
+        'uid': uid,
+        'token': token,
+    })
+
+    if response.status_code == 204:
+        return render(request, 'email/activation_success.html')
+    else:
+        return render(request, 'email/activation_error.html')

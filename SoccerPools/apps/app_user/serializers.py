@@ -16,6 +16,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             name=clean_data['name'],
             last_name=clean_data['last_name']
         )
+        # User will be inactive until registration confirmed via email
+        user_obj.is_active = False
+        user_obj.save()
         return user_obj
     
 
