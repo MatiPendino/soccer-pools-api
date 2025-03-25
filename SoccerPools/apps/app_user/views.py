@@ -13,6 +13,7 @@ from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render
+from django.http import JsonResponse
 from utils import generate_unique_field_value
 from apps.bet.models import BetLeague
 from apps.league.serializers import LeagueSerializer
@@ -172,3 +173,40 @@ def activate_user(request, uid, token):
         return render(request, 'email/activation_success.html')
     else:
         return render(request, 'email/activation_error.html')
+
+
+@csrf_exempt
+def password_reset_confirm_view(request, uid, token):
+    context = {
+        'uid': uid, 
+        'token': token, 
+        'error': None, 
+        'success': False
+    }
+
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        re_new_password = request.POST.get('re_new_password')
+
+        if not new_password or not re_new_password:
+            context['error'] = 'Please fill in all fields.'
+        elif new_password != re_new_password:
+            context['error'] = 'Passwords do not match.'
+        else:
+            response = requests.post(
+                f'{config("BACKEND_URL")}/api/users/reset_password_confirm/', 
+                data={
+                    'uid': uid,
+                    'token': token,
+                    'new_password': new_password,
+                    're_new_password': re_new_password,
+                }
+            )
+
+            if response.status_code == 204:
+                context['success'] = True
+            else:
+                print()
+                context['error'] = response.json().get('detail', 'An error occurred.')
+
+    return render(request, 'email/password_reset_form.html', context)

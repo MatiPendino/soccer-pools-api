@@ -107,12 +107,11 @@ REST_FRAMEWORK = {
 }
 
 # Email backend
-EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
+EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
 DEFAULT_FROM_EMAIL = config('FROM_EMAIL')
 
 ANYMAIL = {
-    "MAILGUN_API_KEY": config('MAILGUN_KEY'),
-    "MAILGUN_SENDER_DOMAIN": config('SENDER_DOMAIN'),  
+    "SENDGRID_API_KEY": config('SENDGRID_KEY'),
 }
 
 SIMPLE_JWT = {
@@ -131,6 +130,8 @@ DJOSER = {
     'SEND_CONFIRMATION_EMAIL': False,
     'SEND_ACTIVATION_EMAIL': True,
     'ACTIVATION_URL': 'api/user/activate/{uid}/{token}',
+    'SEND_PASSWORD_RESET_EMAIL': True,
+    'PASSWORD_RESET_CONFIRM_URL': 'api/user/password_reset_confirm/{uid}/{token}',
     'SERIALIZERS': {
         'user_create': 'apps.app_user.serializers.UserRegisterSerializer'
     },

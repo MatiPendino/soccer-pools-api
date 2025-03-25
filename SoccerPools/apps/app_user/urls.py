@@ -12,4 +12,5 @@ urlpatterns = [
     path('android_google_oauth2/', GoogleLoginView.as_view(), name='android-google-oauth2'),
     path('remove_user/', remove_user, name='remove_user'),
     path('activate/<uid>/<token>/', activate_user, name='activate-user'),
+    path('password_reset_confirm/<uid>/<token>/', password_reset_confirm_view, name="password-reset-confirm"),
 ]
