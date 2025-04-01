@@ -46,14 +46,17 @@ class BetRound(AbstractBetModel):
     @property
     def points(self):
         if self.round.is_general_round:
-            match_points = BetRound.objects.filter(
-                state=True,
-                bet_league__user=self.bet_league.user,
-                round__league=self.round.league,
-                round__is_general_round=False
-            ).aggregate(total_points=models.Sum(
-                'match_results__points'
-            ))['total_points'] or 0
+            if self.bet_league:
+                match_points = BetRound.objects.filter(
+                    state=True,
+                    bet_league__user=self.bet_league.user,
+                    round__league=self.round.league,
+                    round__is_general_round=False
+                ).aggregate(total_points=models.Sum(
+                    'match_results__points'
+                ))['total_points'] or 0
+            else:
+                match_points = 0
         else:
             match_points = self.match_results.aggregate(
                 total_points=models.Sum('points')
@@ -62,4 +65,5 @@ class BetRound(AbstractBetModel):
         return match_points
 
     def __str__(self):
-        return f'{self.bet_league.get_user_username()} - {self.round.name}'
+        bet_league_user_username = self.bet_league.get_user_username() if self.bet_league else '-'
+        return f'{bet_league_user_username} - {self.round.name}'

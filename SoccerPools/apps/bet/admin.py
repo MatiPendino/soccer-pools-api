@@ -33,7 +33,7 @@ class BetRoundAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     resource_class = BetRoundResources
 
     def get_user_username(self, obj):
-        return obj.bet_league.get_user_username()
+        return obj.bet_league.get_user_username() if obj.bet_league else '-'
     get_user_username.admin_order_field = 'bet_league__user__username'
     get_user_username.short_description = 'User'
 
