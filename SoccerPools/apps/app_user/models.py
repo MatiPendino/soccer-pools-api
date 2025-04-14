@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.base_user import BaseUserManager
 from django.core.validators import MinValueValidator
 from django.apps import apps
+from django.utils import timezone
 from .validations import validate_no_spaces
 
 class AppUserManager(BaseUserManager):
@@ -49,6 +50,8 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     balance = models.DecimalField(default=0, max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    coins = models.PositiveIntegerField(default=3000)
+    created_at = models.DateTimeField(default=timezone.now, null=True)
     
     objects = AppUserManager()
     USERNAME_FIELD = 'username'

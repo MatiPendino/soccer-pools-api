@@ -9,4 +9,5 @@ class AppUserFactory(factory.django.DjangoModelFactory):
     email = 'testing@gmail.com'
     name = factory.Faker('word')
     last_name = factory.Faker('word')
+    coins = 3000
     
