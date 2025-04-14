@@ -30,4 +30,4 @@ def send_push_round_starting_24hs():
                         notification_body=notification_body
                     )
                 except Exception as err:
-                    capture_message(f'Error sending push nots: {str(err)}', level="error")
+                    pass
