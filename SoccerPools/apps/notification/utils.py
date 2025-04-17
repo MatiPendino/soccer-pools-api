@@ -3,6 +3,7 @@ import os
 from decouple import config
 from google.oauth2 import service_account
 from pyfcm import FCMNotification
+from sentry_sdk import capture_message
 from .models import FCMToken
 
 def get_fcm_object():
@@ -48,3 +49,25 @@ def send_push_nots_match(team_1_name, team_2_name, goals_home, goals_away, leagu
             )
         except:
             pass
+
+
+def send_push_nots_round_winner(user, round_name, coins_prize):
+    notification_title = f'GANASTE {coins_prize} MONEDAS!'
+    notification_body = f'Felicidades! Has ganado monedas en {round_name} gracias a tus habilidades;)'
+
+    try:
+        fcm_token = FCMToken.objects.get(
+            state=True, 
+            user=user
+        )
+        fcm = get_fcm_object()
+        try:
+            result = fcm.notify(
+                fcm_token=fcm_token.token_id, 
+                notification_title=notification_title, 
+                notification_body=notification_body
+            )
+        except:
+            pass
+    except Exception as err:
+        capture_message(f'Error retrieving FCMToken object: {str(err)}', level='error')
