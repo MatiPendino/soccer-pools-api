@@ -50,14 +50,17 @@ class UserLogout(APIView):
         return Response(status=status.HTTP_200_OK)
     
 
-class UserView(APIView):
-    authentication_classes = (SessionAuthentication,)
+class UserApiView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
         serializer = UserSerializer(request.user)
-        response = Response({'user': serializer.data}, status=status.HTTP_200_OK)
+        response = Response(serializer.data, status=status.HTTP_200_OK)
         return response
+    
+    def patch(self, request):
+        # TODO 
+        pass
     
 
 class UserDestroyApiView(APIView):
