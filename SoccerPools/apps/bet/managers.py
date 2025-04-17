@@ -1,7 +1,9 @@
 from django.db.models import (
     Sum, IntegerField, F, Q, ExpressionWrapper, Value, Manager
 )
+from django.shortcuts import get_object_or_404
 from django.db.models.functions import Coalesce
+from apps.league.models import Round
 
 class BetRoundManager(Manager):
     def with_matches_points(self, round_slug):
@@ -11,36 +13,44 @@ class BetRoundManager(Manager):
 
             Returns the queryset ordered by matches_points desc
         """
-        return self.filter(
+        round = get_object_or_404(Round, slug=round_slug)
+        bet_rounds = self.filter(
             round__slug=round_slug, 
             state=True
-        ).annotate(
-            matches_points=ExpressionWrapper(
-                # If round.is_general_round == True, sum points from all bets in the same league
-                Coalesce(
-                    Sum(
-                        'bet_league__bet_rounds__match_results__points',
-                        filter=(
-                            Q(round__is_general_round=True) &
-                            Q(bet_league__bet_rounds__state=True) &
-                            Q(bet_league__bet_rounds__round__league=F('round__league'))
-                        )
-                    ), Value(0),
-                    output_field=IntegerField()
-                ) + 
-                # Otherwise, sum points from match results directly related to the instance
-                Coalesce(
-                    Sum(
-                        'match_results__points',
-                        filter=(
-                            Q(round__is_general_round=False) 
-                        )
-                    ), Value(0),
-                    output_field=IntegerField()
-                ),
-                output_field=IntegerField()
+        )
+
+        if round.is_general_round:
+            bet_rounds = bet_rounds.annotate(
+                matches_points=ExpressionWrapper(
+                    Coalesce(
+                        Sum(
+                            'bet_league__bet_rounds__match_results__points',
+                            filter=(
+                                Q(round__is_general_round=True) &
+                                Q(bet_league__bet_rounds__state=True) &
+                                Q(bet_league__bet_rounds__round__league=F('round__league'))
+                            )
+                        ), Value(0),
+                        output_field=IntegerField()
+                    ), output_field=IntegerField()
+                )
             )
-        ).order_by('-matches_points', 'bet_league__user__created_at')
+        else:
+            bet_rounds = bet_rounds.annotate(
+                matches_points=ExpressionWrapper(
+                    Coalesce(
+                        Sum(
+                            'match_results__points',
+                            filter=(
+                                Q(round__is_general_round=False) 
+                            )
+                        ), Value(0),
+                        output_field=IntegerField()
+                    ), output_field=IntegerField()
+                )
+            )
+
+        return bet_rounds.order_by('-matches_points')
     
 
 class BetLeagueManager(Manager):
