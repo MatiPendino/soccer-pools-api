@@ -18,12 +18,29 @@ class League(BaseModel):
         (OCEANIA, 'Oceania'),
         (TOURNAMENTS, 'Tournaments'),
     )
+
+    # Multipliers for Coin Prizes
+    COINS_FIRST_PRIZE_MULT = 250
+    COINS_SECOND_PRIZE_MULT = 100
+    COINS_THIRD_PRIZE_MULT = 50
+
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, null=True, blank=True)
     logo = models.ImageField('Logo of the league', upload_to='league', blank=True, null=True)
     logo_url = models.URLField(blank=True, null=True)
     continent = models.PositiveSmallIntegerField(default=0, choices=LEAGUE_CONTINENTS)
     api_league_id = models.PositiveIntegerField(unique=True, blank=True, null=True)
+    coins_cost = models.PositiveIntegerField(default=1000)
+    
+    @property
+    def coins_prizes(self):
+        bet_leagues_count = self.bet_leagues.count()
+
+        return {
+            'coins_prize_first': bet_leagues_count * League.COINS_FIRST_PRIZE_MULT,
+            'coins_prize_second': bet_leagues_count * League.COINS_SECOND_PRIZE_MULT,
+            'coins_prize_third': bet_leagues_count * League.COINS_THIRD_PRIZE_MULT,
+        }
 
     def __str__(self):
         return self.name
@@ -44,6 +61,11 @@ class Round(BaseModel):
         (FINALIZED_ROUND, 'Finalized'),
     )
 
+    # Multipliers for Coin Prizes
+    COINS_FIRST_PRIZE_MULT = 50
+    COINS_SECOND_PRIZE_MULT = 20
+    COINS_THIRD_PRIZE_MULT = 10
+
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True, null=True)
     number_round = models.PositiveSmallIntegerField('Number of round', blank=True, null=True)
@@ -56,6 +78,16 @@ class Round(BaseModel):
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     is_general_round = models.BooleanField(default=False)
     api_round_name = models.CharField(max_length=60, blank=True, null=True)
+
+    @property
+    def coins_prizes(self):
+        bet_rounds_count = self.bet_rounds.count()
+
+        return {
+            'coins_prize_first': bet_rounds_count * Round.COINS_FIRST_PRIZE_MULT,
+            'coins_prize_second': bet_rounds_count * Round.COINS_SECOND_PRIZE_MULT,
+            'coins_prize_third': bet_rounds_count * Round.COINS_THIRD_PRIZE_MULT,
+        }
 
     def __str__(self):
         return f'{self.name} - {self.league}'

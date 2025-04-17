@@ -8,6 +8,7 @@ class LeagueFactory(factory.django.DjangoModelFactory):
     name = factory.Faker('word')
     slug = factory.Faker('word')
     continent = League.AMERICAS
+    coins_cost = 1000
 
 class RoundFactory(factory.django.DjangoModelFactory):
     class Meta:

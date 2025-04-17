@@ -7,7 +7,9 @@ class LeagueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = League
-        fields = ('id', 'name', 'slug', 'logo', 'continent', 'is_user_joined')
+        fields = (
+            'id', 'name', 'slug', 'logo', 'continent', 'is_user_joined', 'coins_cost', 'coins_prizes'
+        )
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -32,7 +34,7 @@ class RoundSerializer(serializers.ModelSerializer):
         model = Round
         fields = (
             'id', 'name', 'slug', 'number_round', 'start_date', 'end_date', 'round_state',
-            'league', 'has_bet_round'
+            'league', 'has_bet_round', 'coins_prizes'
         )
 
     league = LeagueSerializer()

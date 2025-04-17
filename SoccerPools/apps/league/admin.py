@@ -9,7 +9,7 @@ class LeagueResources(resources.ModelResource):
 
 class LeagueAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     search_fields = ('name', 'slug')
-    list_display = ('name', 'slug')
+    list_display = ('name', 'slug', 'coins_cost')
     resource_class = LeagueResources
 
 admin.site.register(League, LeagueAdmin)
