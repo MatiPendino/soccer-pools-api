@@ -40,7 +40,7 @@ class BetRoundManager(Manager):
                 ),
                 output_field=IntegerField()
             )
-        ).order_by('-matches_points')
+        ).order_by('-matches_points', 'bet_league__user__created_at')
     
 
 class BetLeagueManager(Manager):

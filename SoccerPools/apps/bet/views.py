@@ -1,8 +1,9 @@
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, F
 from django.shortcuts import get_object_or_404
 from apps.league.models import Round, League
 from apps.match.models import Match, MatchResult
@@ -34,7 +35,7 @@ class BetRoundResultsApiView(generics.ListAPIView):
 
 class LeagueBetRoundsMatchResultsCreateApiView(APIView):
     """
-        Creates BetLeague, BetRound and MatchResult instances for the League selected by the user
+        If enough coins, Creates BetLeague, BetRound and MatchResult instances for the League selected by the user
         If there is an existing BetLeague, returns it without new creations
 
         Payload:
@@ -51,7 +52,11 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
     def post(self, request, *args, **kwargs):
         league = get_object_or_404(League, slug=request.data['league_slug'])
         user = request.user
-        # Filter all the NOT finalized rounds
+
+        if (user.coins < league.coins_cost):
+            raise ValidationError({'coins': 'Your coins are insufficient for joining this league'})
+
+        # Filter all the NON finalized rounds
         rounds = Round.objects.filter(
             Q(round_state=Round.NOT_STARTED_ROUND) | 
             Q(round_state=Round.PENDING_ROUND),
@@ -85,6 +90,7 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
             return Response(response_data, status=status.HTTP_200_OK)
 
 
+        # BetLeague, BetRound and MatchResult creation
         with transaction.atomic():
             # Create bet_league
             new_bet_league = BetLeague.objects.create(
@@ -105,6 +111,10 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
                 matches = Match.objects.filter(round=bet_round.round, state=True)
                 match_results = [MatchResult(match=soccer_match, bet_round=bet_round) for soccer_match in matches]
                 MatchResult.objects.bulk_create(match_results)
+
+            # Substract user coins
+            user.coins = F('coins') - league.coins_cost
+            user.save()
 
         response_data = generate_response_data(
             league_name=league.name,

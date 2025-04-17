@@ -9,7 +9,7 @@ class BetLeagueResources(resources.ModelResource):
 
 class BetLeagueAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     search_fields = ('operation_code', 'user__username', 'league__name')
-    list_display = ('get_user', 'operation_code', 'get_league', 'winner')
+    list_display = ('get_user', 'operation_code', 'get_league')
     resource_class = BetLeagueResources
 
     def get_user(self, obj):
@@ -29,7 +29,7 @@ class BetRoundResources(resources.ModelResource):
 
 class BetRoundAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     search_fields = ('operation_code', 'bet_league__user__username', 'round__name')
-    list_display = ('get_user_username', 'operation_code', 'get_round', 'points', 'winner')
+    list_display = ('get_user_username', 'operation_code', 'get_round', 'points')
     resource_class = BetRoundResources
 
     def get_user_username(self, obj):

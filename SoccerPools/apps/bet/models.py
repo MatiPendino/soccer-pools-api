@@ -7,7 +7,9 @@ from .utils import generate_unique_code
 
 class AbstractBetModel(BaseModel):
     operation_code = models.CharField(max_length=20, null=True, blank=True)
-    winner = models.BooleanField(default=False)
+    winner_first = models.BooleanField(default=False)
+    winner_second = models.BooleanField(default=False)
+    winner_third = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
@@ -19,8 +21,8 @@ class AbstractBetModel(BaseModel):
 
 
 class BetLeague(AbstractBetModel):
-    user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
-    league = models.ForeignKey(League, on_delete=models.CASCADE)
+    user = models.ForeignKey(AppUser, related_name='bet_leagues', on_delete=models.CASCADE)
+    league = models.ForeignKey(League, related_name='bet_leagues', on_delete=models.CASCADE)
     is_last_visited_league = models.BooleanField(default=False)
 
     objects = BetLeagueManager()
@@ -63,6 +65,9 @@ class BetRound(AbstractBetModel):
             )['total_points'] or 0
 
         return match_points
+    
+    def get_user(self):
+        return self.bet_league.user
 
     def __str__(self):
         bet_league_user_username = self.bet_league.get_user_username() if self.bet_league else '-'
