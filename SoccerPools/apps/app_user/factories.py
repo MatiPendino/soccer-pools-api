@@ -6,7 +6,7 @@ class AppUserFactory(factory.django.DjangoModelFactory):
         model = AppUser
 
     username = factory.Faker('word')
-    email = 'testing@gmail.com'
+    email = factory.Faker('email')
     name = factory.Faker('word')
     last_name = factory.Faker('word')
     coins = 3000

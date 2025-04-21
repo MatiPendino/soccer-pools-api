@@ -18,3 +18,4 @@ class BetRoundFactory(factory.django.DjangoModelFactory):
         model = BetRound
 
     round = factory.SubFactory(RoundFactory)
+    bet_league = factory.SubFactory(BetLeagueFactory)
