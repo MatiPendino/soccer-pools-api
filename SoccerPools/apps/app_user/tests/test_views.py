@@ -111,7 +111,7 @@ class UserViewTest(TestCase):
 
     def test_view_user_not_logged(self):
         response = self.client.get(self.view_url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class UserInLeagueTest(APITestCase):

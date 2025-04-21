@@ -133,10 +133,10 @@ class BetRoundResultsTest(APITestCase):
 class LeagueBetsMatchResultsCreateTest(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        LeagueFactory(name='My League', slug='babosa')
+        LeagueFactory(name='My League', slug='babosa', coins_cost=1000)
 
     def setUp(self):
-        self.user = AppUserFactory(email='leaguebets@gmail.com')
+        self.user = AppUserFactory(email='leaguebets@gmail.com', coins=1500)
         self.league = League.objects.first()
         self.round_1 = RoundFactory(league=self.league)
         self.round_2 = RoundFactory(league=self.league)
@@ -157,7 +157,7 @@ class LeagueBetsMatchResultsCreateTest(APITestCase):
     def test_league_bets_creation(self):
         """
             Test that all the BetLeague, BetRound and MatchResult instances are created 
-            for the user based on the league
+            for the user based on the league, and coins are substracted from the user
         """
         self.client.force_authenticate(user=self.user)
         data = {
@@ -170,6 +170,8 @@ class LeagueBetsMatchResultsCreateTest(APITestCase):
         self.assertEqual(BetRound.objects.count(), 2)
         self.assertEqual(BetRound.objects.first().bet_league, BetLeague.objects.first())
         self.assertEqual(MatchResult.objects.count(), 6)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.coins, 500)
 
     def test_already_created_bet_league(self):
         """
@@ -222,3 +224,18 @@ class LeagueBetsMatchResultsCreateTest(APITestCase):
         self.assertEqual(BetRound.objects.count(), 2)
         self.assertEqual(BetRound.objects.first().bet_league, BetLeague.objects.first())
         self.assertEqual(MatchResult.objects.count(), 6)
+
+    def test_no_enough_coins(self):
+        """
+            Test that when the user does not have enough coins, a ValidationError is raised
+        """
+        self.user.coins = 0
+        self.user.save()
+        self.client.force_authenticate(user=self.user)
+        data = {
+            'league_slug': self.league.slug,
+        }
+        response = self.client.post(self.url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(BetLeague.objects.count(), 0)

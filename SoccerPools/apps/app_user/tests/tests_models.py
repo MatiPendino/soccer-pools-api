@@ -23,6 +23,12 @@ class AppUserModelTest(TestCase):
         with self.assertRaises(ValidationError):
             user.clean_fields()
 
+    def test_negative_coins(self):
+        user = User.objects.all().first()
+        user.coins = -1
+        with self.assertRaises(ValidationError):
+            user.clean_fields()
+
     def test_username_no_spaces(self):
         user = User.objects.all().first()
         user.username = 'Matias Pendino'

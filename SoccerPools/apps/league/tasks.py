@@ -35,7 +35,6 @@ def finalize_pending_rounds():
         )
     ).filter(state=True, round_state=Round.PENDING_ROUND, non_finalized_matches=0)
 
-    print(pending_rounds)
     with transaction.atomic():
         for pending_round in pending_rounds:
             first_bet_round, second_bet_round, third_bet_round = BetRound.objects.with_matches_points(
@@ -64,6 +63,7 @@ def finalize_pending_rounds():
             first_user.save()
             second_user.save()
             third_user.save()
+            
             send_push_nots_round_winner(first_user, pending_round.name, first_prize)
             send_push_nots_round_winner(second_user, pending_round.name, second_prize)
             send_push_nots_round_winner(third_user, pending_round.name, third_prize)

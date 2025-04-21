@@ -82,11 +82,20 @@ class Round(BaseModel):
     @property
     def coins_prizes(self):
         bet_rounds_count = self.bet_rounds.count()
+        coins_prize_first = bet_rounds_count * (
+            Round.COINS_FIRST_PRIZE_MULT if not self.is_general_round else League.COINS_FIRST_PRIZE_MULT
+        )
+        coins_prize_second = bet_rounds_count * (
+            Round.COINS_SECOND_PRIZE_MULT if not self.is_general_round else League.COINS_SECOND_PRIZE_MULT
+        )
+        coins_prize_third = bet_rounds_count * (
+            Round.COINS_THIRD_PRIZE_MULT if not self.is_general_round else League.COINS_THIRD_PRIZE_MULT
+        )
 
         return {
-            'coins_prize_first': bet_rounds_count * Round.COINS_FIRST_PRIZE_MULT,
-            'coins_prize_second': bet_rounds_count * Round.COINS_SECOND_PRIZE_MULT,
-            'coins_prize_third': bet_rounds_count * Round.COINS_THIRD_PRIZE_MULT,
+            'coins_prize_first': coins_prize_first,
+            'coins_prize_second': coins_prize_second,
+            'coins_prize_third': coins_prize_third,
         }
 
     def __str__(self):
