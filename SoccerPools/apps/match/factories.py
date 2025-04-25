@@ -12,6 +12,7 @@ class MatchFactory(factory.django.DjangoModelFactory):
     round = factory.SubFactory(RoundFactory)
     match_state = Match.NOT_STARTED_MATCH
     start_date = None
+    api_match_id = None
 
 
 class MatchResultFactory(factory.django.DjangoModelFactory):

@@ -8,6 +8,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils.timezone import now, timedelta
 from django.utils.timezone import localtime
+from django.core.mail import mail_admins
 from apps.notification.utils import send_push_nots_match
 from apps.league.models import Round
 from apps.match.models import Match, MatchResult
@@ -42,13 +43,13 @@ def finalize_matches():
         state=True, 
         match_state=Match.PENDING_MATCH
     ).select_related('round__league', 'team_1', 'team_2')
-    url = f'https://v3.football.api-sports.io/fixtures?&timezone={TIMEZONE}'
+    base_url = f'https://v3.football.api-sports.io/fixtures?&timezone={TIMEZONE}'
     headers = {
         'x-apisports-key': config('API_FOOTBALL_KEY')
     }
     for match in pending_matches:
         if match.api_match_id:
-            url = url + f'&id={match.api_match_id}'
+            url = f'{base_url}&id={match.api_match_id}'
             response = requests.get(url, headers=headers)
             response_obj = json.loads(response.text)
             match_response = response_obj.get('response')[0]
@@ -113,9 +114,9 @@ def update_matches_start_date():
         match_state=Match.NOT_STARTED_MATCH,
     )
 
-    url = f'https://v3.football.api-sports.io/fixtures?timezone={TIMEZONE}'
+    base_url = f'https://v3.football.api-sports.io/fixtures?timezone={TIMEZONE}'
     for match in matches:
-        url += f'&id={match.api_match_id}'
+        url = f'{base_url}&id={match.api_match_id}'
         headers = {
             'x-apisports-key': config('API_FOOTBALL_KEY')
         }
@@ -134,3 +135,51 @@ def update_matches_start_date():
     rounds = Round.objects.filter(matches__in=matches).distinct()
     for round in rounds:
         round.update_start_date()
+
+
+@shared_task
+def check_suspended_matches():
+    """
+        Check if any match is suspended / postponed and send email to the admin to let them know.
+        It is not good idea to directly set the match state to cancelled, because the match could be in a 
+        short period of time
+    """
+    TIMEZONE = 'America/Argentina/Ushuaia'
+    three_hours_before = now() - timedelta(hours=3)
+    two_days_before = now() - timedelta(days=2)
+    matches = Match.objects.filter(
+        state=True,
+        match_state=Match.PENDING_MATCH,
+        start_date__gte=two_days_before,
+        start_date__lte=three_hours_before,
+    )
+
+    base_url = f'https://v3.football.api-sports.io/fixtures?timezone={TIMEZONE}'
+    for match in matches:
+        url = f'{base_url}&id={match.api_match_id}'
+        headers = {
+            'x-apisports-key': config('API_FOOTBALL_KEY')
+        }
+
+        try:
+            response = requests.get(url, headers=headers)
+            response_obj = json.loads(response.text)
+        except Exception as err:
+            capture_message(f'Error getting api response: {str(err)}', level="error")
+            continue
+
+        match_response = response_obj.get('response')[0]
+        fixture_data = match_response.get('fixture')
+        fixture_status = fixture_data.get('status')
+        short = fixture_status.get('short')
+
+        if short in ['PST', 'CANC', 'ABD', 'WO', 'AWD', 'SUSP']:
+            subject = f'[ALERT] Match {match.id} ({match.api_match_id}) is {short}'
+            message = (
+                f"Match ID: {match.id}\n"
+                f"API Match ID: {match.api_match_id}\n"
+                f"Scheduled Start: {match.start_date.isoformat()}\n"
+                f"Reported Status: {short}\n\n"
+                "Please log in to the admin panel and review the fixture."
+            )
+            mail_admins(subject, message)

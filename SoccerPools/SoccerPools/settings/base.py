@@ -110,6 +110,11 @@ REST_FRAMEWORK = {
 EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
 DEFAULT_FROM_EMAIL = config('FROM_EMAIL')
 
+ADMINS = [
+    ('Admin 1', config('ADMIN_1_EMAIL')),
+    ('Admin 2', config('ADMIN_2_EMAIL')),
+]
+
 ANYMAIL = {
     "SENDGRID_API_KEY": config('SENDGRID_KEY'),
 }

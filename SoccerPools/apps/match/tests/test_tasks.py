@@ -2,11 +2,14 @@ from unittest.mock import patch, MagicMock
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now, timedelta
+from django.core import mail
 from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
 from apps.bet.factories import BetRoundFactory, BetLeagueFactory
 from apps.match.models import MatchResult, Match
 from apps.match.factories import MatchResultFactory, MatchFactory
-from apps.match.tasks import check_upcoming_matches, finalize_matches, update_matches_start_date
+from apps.match.tasks import (
+    check_upcoming_matches, finalize_matches, update_matches_start_date, check_suspended_matches
+)
 
 User = get_user_model()
 class UpcomingMatchesTest(TestCase):
@@ -251,3 +254,85 @@ class UpdateMatchesStartDate(TestCase):
         self.assertEqual(self.round.start_date, self.two_hs_less)
         self.assertEqual(self.match_1.start_date, new_start_date)
         self.assertEqual(self.match_4.start_date, self.in_12_hs)
+
+
+class CheckSuspendedMatchesTest(TestCase):
+    def setUp(self):
+        self.league = LeagueFactory(name='Suspended Matches Testing')
+        self.team_1 = TeamFactory(leagues=[self.league])
+        self.team_2 = TeamFactory(leagues=[self.league])
+        self.team_3 = TeamFactory(leagues=[self.league])
+        self.team_4 = TeamFactory(leagues=[self.league])
+        self.round = RoundFactory(league=self.league)
+        self.match_1 = MatchFactory(
+            team_1=self.team_1, 
+            team_2=self.team_2, 
+            match_state=Match.PENDING_MATCH,
+            round=self.round,
+            start_date=now()-timedelta(hours=5),
+            api_match_id=1
+        )
+        self.match_2 = MatchFactory(
+            team_1=self.team_3, 
+            team_2=self.team_4, 
+            match_state=Match.NOT_STARTED_MATCH,
+            round=self.round,
+            start_date=now()+timedelta(minutes=25),
+            api_match_id=2
+        )
+
+    @patch('apps.match.tasks.requests.get')
+    def test_sends_email_for_suspended_match(self, mock_requests_get):
+        """
+            Test that an email is sent when a match is suspended
+        """
+        # Create a mock API response
+        fake_api_response = f"""{{
+            "response": [{{
+                "fixture": {{
+                    "status": {{
+                        "short": "SUSP"
+                    }}
+                }} 
+            }}]
+        }}"""
+
+        # Configure the mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.get.return_value.text = fake_api_response
+        mock_requests_get.return_value.text = fake_api_response 
+
+        check_suspended_matches()
+
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertIn(f'Match {self.match_1.id}', email.subject)
+        self.assertIn('Reported Status: SUSP', email.body)
+
+
+    @patch('apps.match.tasks.requests.get')
+    def test_no_email_sent_for_non_suspended_match(self, mock_requests_get):
+        """
+            Test that no email is sent when a match is not suspended
+        """
+        # Create a mock API response
+        fake_api_response = f"""{{
+            "response": [{{
+                "fixture": {{
+                    "status": {{
+                        "short": "FT"
+                    }}
+                }} 
+            }}]
+        }}"""
+
+        # Configure the mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.get.return_value.text = fake_api_response
+        mock_requests_get.return_value.text = fake_api_response 
+
+        check_suspended_matches()
+
+        self.assertEqual(len(mail.outbox), 0)

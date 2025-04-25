@@ -15,11 +15,10 @@ class Command(BaseCommand):
         season = options.get('season')
         round = options.get('round')
 
-        url = f'https://v3.football.api-sports.io/fixtures?league={league_id}&season={season}&timezone={TIMEZONE}'
+        base_url = f'https://v3.football.api-sports.io/fixtures?league={league_id}&season={season}&timezone={TIMEZONE}'
         print(round)
         if round:
-            url = url + f'&round={round}'
-            print(url)
+            url = f'{base_url}&round={round}'
         headers = {
             'x-apisports-key': config('API_FOOTBALL_KEY')
         }
