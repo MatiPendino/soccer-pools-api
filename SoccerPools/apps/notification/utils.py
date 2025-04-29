@@ -51,16 +51,38 @@ def send_push_nots_match(team_1_name, team_2_name, goals_home, goals_away, leagu
             pass
 
 
-def send_push_nots_round_winner(user, round_name, coins_prize):
+def send_push_winner(user, name, coins_prize):
     notification_title = f'GANASTE {coins_prize} MONEDAS!'
-    notification_body = f'Felicidades! Has ganado monedas en {round_name} gracias a tus habilidades;)'
+    notification_body = f'Felicidades! Has ganado monedas en {name} gracias a tus habilidades;)'
 
+    fcm_token = FCMToken.objects.filter(
+        state=True, 
+        user=user
+    ).first()
+    if not fcm_token:
+        return
+    
+    fcm = get_fcm_object()
     try:
-        fcm_token = FCMToken.objects.get(
-            state=True, 
-            user=user
+        result = fcm.notify(
+            fcm_token=fcm_token.token_id, 
+            notification_title=notification_title, 
+            notification_body=notification_body
         )
-        fcm = get_fcm_object()
+    except:
+        pass
+
+
+def send_push_finalized_league(league):
+    notification_title = f'{league.name} HA FINALIZADO!'
+    notification_body = 'Mira tus resultados actualizados!'
+
+    fcm_tokens = FCMToken.objects.filter(
+        state=True, 
+        leagues=league
+    )
+    fcm = get_fcm_object()
+    for fcm_token in fcm_tokens:
         try:
             result = fcm.notify(
                 fcm_token=fcm_token.token_id, 
@@ -69,5 +91,3 @@ def send_push_nots_round_winner(user, round_name, coins_prize):
             )
         except:
             pass
-    except Exception as err:
-        capture_message(f'Error retrieving FCMToken object: {str(err)}', level='error')

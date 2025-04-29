@@ -2,10 +2,11 @@ from celery import shared_task
 from django.utils.timezone import now, timedelta
 from django.db import transaction
 from django.db.models import Q, Count, F
+from django.core.mail import mail_admins
 from apps.match.models import Match
 from apps.bet.models import BetRound
-from apps.notification.utils import send_push_nots_round_winner
-from .models import Round
+from apps.notification.utils import send_push_winner, send_push_finalized_league
+from .models import Round, League
 
 @shared_task
 def check_upcoming_rounds():
@@ -23,7 +24,10 @@ def check_upcoming_rounds():
 
 @shared_task
 def finalize_pending_rounds():
-    """Finalize all PENDING rounds where all its matches are FINALIZED, and distribute Coin Rewards"""
+    """
+        Finalize all PENDING rounds where all its matches are FINALIZED or CANCELLED, 
+        and distribute Coin Rewards
+    """
 
     pending_rounds = Round.objects.annotate(
         non_finalized_matches=Count(
@@ -37,36 +41,44 @@ def finalize_pending_rounds():
 
     with transaction.atomic():
         for pending_round in pending_rounds:
-            first_bet_round, second_bet_round, third_bet_round = BetRound.objects.with_matches_points(
-                round_slug=pending_round.slug
-            )[:3]
-
-            first_bet_round.winner_first = True
-            second_bet_round.winner_second = True
-            third_bet_round.winner_third = True
-            first_bet_round.save()
-            second_bet_round.save()
-            third_bet_round.save()
-
-            n_bet_rounds = pending_round.bet_rounds.count()
-            first_user = first_bet_round.get_user()
-            second_user = second_bet_round.get_user()
-            third_user = third_bet_round.get_user()
-
-            first_prize = n_bet_rounds * Round.COINS_FIRST_PRIZE_MULT
-            second_prize = n_bet_rounds * Round.COINS_SECOND_PRIZE_MULT
-            third_prize = n_bet_rounds * Round.COINS_THIRD_PRIZE_MULT
-
-            first_user.coins = F('coins') + first_prize
-            second_user.coins = F('coins') + second_prize
-            third_user.coins = F('coins') + third_prize
-            first_user.save()
-            second_user.save()
-            third_user.save()
-            
-            send_push_nots_round_winner(first_user, pending_round.name, first_prize)
-            send_push_nots_round_winner(second_user, pending_round.name, second_prize)
-            send_push_nots_round_winner(third_user, pending_round.name, third_prize)
-            
+            pending_round.update_round_winners_prizes(competition_name=pending_round.name)
             
         pending_rounds.update(round_state=Round.FINALIZED_ROUND)
+
+
+@shared_task
+def check_finalized_leagues():
+    """
+        Check if any league has all its rounds finalized
+        If the league format is actually a league, set the league state to FINALIZED and give coin prizes 
+        In case that the league format is a cup, send email to the admins to let them know and see 
+        how to proceed
+    """
+
+    leagues = League.objects.filter(
+        state=True,
+        league_state__in=[League.PENDING_LEAGUE, League.NOT_STARTED_LEAGUE],
+    ).annotate(
+        non_finalized=Count(
+            'rounds',
+            filter=Q(rounds__state=True) & ~Q(rounds__round_state=Round.FINALIZED_ROUND)
+        )
+    ).filter(non_finalized=1)
+    
+    for league in leagues:
+        if league.is_cup:
+            subject = f'[ALERT] Cup {league.name} {league.id} has all the rounds FINALIZED'
+            message = (
+                f"League ID: {league.id}\n"
+                f"API League ID: {league.api_league_id}\n"
+                "Please log in to the admin panel and see how to proceed."
+            )
+            mail_admins(subject, message)
+        else:
+            with transaction.atomic():
+                general_round = league.rounds.filter(is_general_round=True).first()
+                general_round.update_round_winners_prizes(competition_name=league.name)
+                send_push_finalized_league(league)
+
+                league.league_state = League.FINALIZED_LEAGUE
+                league.save()
