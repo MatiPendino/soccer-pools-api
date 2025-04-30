@@ -40,7 +40,7 @@ class BetLeague(AbstractBetModel):
 class BetRound(AbstractBetModel):
     round = models.ForeignKey(Round, related_name='bet_rounds', on_delete=models.CASCADE)
     bet_league = models.ForeignKey(
-        BetLeague, related_name='bet_rounds', on_delete=models.SET_NULL, null=True, blank=True
+        BetLeague, related_name='bet_rounds', on_delete=models.CASCADE, null=True, blank=True
     )
 
     objects = BetRoundManager()
