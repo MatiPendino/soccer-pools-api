@@ -109,6 +109,7 @@ REST_FRAMEWORK = {
 # Email backend
 EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
 DEFAULT_FROM_EMAIL = config('FROM_EMAIL')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 ADMINS = [
     ('Admin 1', config('ADMIN_1_EMAIL')),
