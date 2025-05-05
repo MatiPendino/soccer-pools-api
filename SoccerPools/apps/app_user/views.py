@@ -8,12 +8,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.viewsets import ViewSet
+from rest_framework.decorators import action
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.db.models import F
 from utils import generate_unique_field_value
 from apps.bet.models import BetLeague
 from apps.league.serializers import LeagueSerializer
@@ -50,7 +53,7 @@ class UserLogout(APIView):
         return Response(status=status.HTTP_200_OK)
     
 
-class UserApiView(APIView):
+class LegacyUserApiView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
@@ -58,9 +61,30 @@ class UserApiView(APIView):
         response = Response(serializer.data, status=status.HTTP_200_OK)
         return response
     
-    def patch(self, request):
-        # TODO 
-        pass
+        
+class UserViewSet(ViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = AppUser.objects.all()
+
+    @action(detail=False, methods=['get'], url_path='me')
+    def me(self, request):
+        """Get the current user"""
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+    @action(detail=False, methods=['post'], url_path='add_coins')
+    def add_coins(self, request):
+        """Add coins to the user"""
+        coins = request.data.get('coins')
+        if coins is None:
+            raise ValidationError({'coins': 'Coins were not provided'})
+
+        user = request.user
+        user.coins = F('coins') + int(coins)
+        user.save()
+        user.refresh_from_db()
+        return Response({'coins': user.coins}, status=status.HTTP_200_OK)
     
 
 class UserDestroyApiView(APIView):

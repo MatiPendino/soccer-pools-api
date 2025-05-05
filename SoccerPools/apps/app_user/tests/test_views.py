@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 from apps.app_user.factories import AppUserFactory
@@ -112,6 +113,32 @@ class UserViewTest(TestCase):
     def test_view_user_not_logged(self):
         response = self.client.get(self.view_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class UserViewSetTest(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = AppUserFactory(
+            username='testuser',
+            coins=3000
+        )
+        self.client.force_authenticate(user=self.user)
+        self.url = '/api/user/user/'
+
+    def test_add_coins(self):
+        add_coins_url = f'{self.url}add_coins/'
+        response = self.client.post(add_coins_url, {'coins': 1000})
+        self.user.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.user.coins, 4000)
+
+    def test_add_coins_invalid(self):
+        add_coins_url = f'{self.url}add_coins/'
+        with self.assertRaises(ValidationError):
+            response = self.client.post(add_coins_url)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.coins, 3000)
 
 
 class UserInLeagueTest(APITestCase):
