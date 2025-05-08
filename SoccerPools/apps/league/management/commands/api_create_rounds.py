@@ -27,21 +27,27 @@ class Command(BaseCommand):
         print(response.status_code)
         rounds = response_obj.get('response')
         n_created_rounds = 0
-        for i, round in enumerate(rounds, start=1):
-            Round.objects.create(
+
+        already_existing_rounds = Round.objects.filter(league=league)
+        # Create a general round if there is no existing rounds for the league
+        if not already_existing_rounds.exists():
+            Round.objects.create( 
                 league=league,
-                name=round,
-                api_round_name=round,
-                number_round=i
+                number_round=0,
+                name='General',
+                is_general_round=True
             )
             n_created_rounds += 1
 
-        Round.objects.create( # General Round creation
-            league=league,
-            number_round=0,
-            name='General',
-            is_general_round=True
-        )
-        n_created_rounds += 1
+        for i, round in enumerate(rounds, start=1):
+            new_round, was_created = Round.objects.get_or_create(
+                league=league,
+                api_round_name=round,
+                defaults={
+                    'name': round,
+                    'number_round': i
+                }
+            )
+            n_created_rounds += 1 if was_created else 0
 
         print(f'{n_created_rounds} new Rounds created for {league}')

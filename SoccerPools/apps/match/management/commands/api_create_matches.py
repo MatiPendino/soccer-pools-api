@@ -2,6 +2,7 @@ import requests
 import json
 from decouple import config
 from django.core.management.base import BaseCommand
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from apps.league.models import Round, Team, League
 from apps.match.models import Match
@@ -47,11 +48,15 @@ class Command(BaseCommand):
             away_id = teams.get('away').get('id')
 
             if short in ['TBD', 'NS']:
-                round = get_object_or_404(Round, state=True, league=league, api_round_name=round)
+                try:
+                    round = get_object_or_404(Round, state=True, league=league, api_round_name=round)
+                except Http404:
+                    print(f'Round {round} does not exist for league {league}')
+                    continue
                 team_1 = get_object_or_404(Team, state=True, leagues=league, api_team_id=home_id)
                 team_2 = get_object_or_404(Team, state=True, leagues=league, api_team_id=away_id)
 
-                Match.objects.get_or_create(
+                new_match, was_created = Match.objects.get_or_create(
                     round=round,
                     team_1=team_1,
                     team_2=team_2,
@@ -60,6 +65,6 @@ class Command(BaseCommand):
                         'start_date': start_date
                     }
                 )
-                n_created_matches += 1
+                n_created_matches += 1 if was_created else 0
         
         print(f'{n_created_matches} Matches created, league {league}')

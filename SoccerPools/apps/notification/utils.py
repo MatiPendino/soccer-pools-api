@@ -91,3 +91,24 @@ def send_push_finalized_league(league):
             )
         except:
             pass
+
+
+def send_push_new_round_available(round_name, league):
+    """Send a push notification to all league users when a new round is available"""
+    notification_title = f'{round_name} disponible en la {league.name}!'
+    notification_body = 'Agrega tus resultados ahora!'
+
+    fcm_tokens = FCMToken.objects.filter(
+        state=True, 
+        leagues=league
+    )
+    fcm = get_fcm_object()
+    for fcm_token in fcm_tokens:
+        try:
+            result = fcm.notify(
+                fcm_token=fcm_token.token_id, 
+                notification_title=notification_title, 
+                notification_body=notification_body
+            )
+        except:
+            pass
