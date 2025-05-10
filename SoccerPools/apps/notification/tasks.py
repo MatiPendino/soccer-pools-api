@@ -20,7 +20,7 @@ def send_push_round_starting_24hs():
         for round in rounds:
             league = round.league
             fcm_tokens = FCMToken.objects.filter(state=True, leagues=league)
-            notification_title = f'Esta por comenzar {round.name}'
+            notification_title = f'Está por comenzar {round.name} - {league.name}'
             notification_body = 'Realiza tus predicciones antes de que inicie la fecha!'
             for fcm_token in fcm_tokens:
                 try:
