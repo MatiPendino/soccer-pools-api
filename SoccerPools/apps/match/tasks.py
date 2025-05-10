@@ -52,7 +52,11 @@ def finalize_matches():
             url = f'{base_url}&id={match.api_match_id}'
             response = requests.get(url, headers=headers)
             response_obj = json.loads(response.text)
-            match_response = response_obj.get('response')[0]
+            try:
+                match_response = response_obj.get('response')[0]
+            except IndexError:
+                capture_message(f'Error getting match {match} for api_match_id {match.api_match_id}', level="error")
+                continue
             goals_home = match_response.get('goals').get('home')
             goals_away = match_response.get('goals').get('away')
             fixture_status = match_response.get('fixture').get('status')
