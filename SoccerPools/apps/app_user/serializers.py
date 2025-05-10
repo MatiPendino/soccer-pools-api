@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model, authenticate
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
 User = get_user_model()
@@ -29,7 +30,7 @@ class UserLoginSerializer(serializers.Serializer):
     def check_user(self, clean_data):
         user = authenticate(username=clean_data.get('username'), password=clean_data.get('password'))
         if not user:
-            raise ValueError('User not found.')
+            raise ValidationError('User not found.')
         return user
     
 

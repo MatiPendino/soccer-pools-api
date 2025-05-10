@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.core.exceptions import ValidationError
 from apps.app_user.serializers import UserRegisterSerializer, UserLoginSerializer
 from apps.app_user.models import AppUser
 
@@ -88,5 +89,5 @@ class UserLoginSerializerTest(TestCase):
         data = {'username': 'not_existing', 'password': '123456789'}
         serializer = UserLoginSerializer(data=data)
         if serializer.is_valid():
-            with self.assertRaises(ValueError):
+            with self.assertRaises(ValidationError):
                 serializer.check_user(data)

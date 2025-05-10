@@ -2,6 +2,7 @@ from django.db import models, transaction
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.base_user import BaseUserManager
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from django.apps import apps
 from django.utils import timezone
 from .validations import validate_no_spaces
@@ -24,20 +25,20 @@ class AppUserManager(BaseUserManager):
         
     def create_user(self, username, email, name, last_name, password=None, **extra_fields):
         if not username:
-            raise ValueError('A username is required.')
+            raise ValidationError('A username is required.')
         if not email:
-            raise ValueError('An email is required.')
+            raise ValidationError('An email is required.')
         if not password:
-            raise ValueError('A password is required.')
+            raise ValidationError('A password is required.')
         return self._create_user(username, email, name, last_name, password, False, False, **extra_fields)
 
     def create_superuser(self, username, email, name, last_name, password=None, **extra_fields):
         if not username:
-            raise ValueError('A username is required.')
+            raise ValidationError('A username is required.')
         if not email:
-            raise ValueError('An email is required.')
+            raise ValidationError('An email is required.')
         if not password:
-            raise ValueError('A password is required.')
+            raise ValidationError('A password is required.')
         return self._create_user(username, email, name, last_name, password, True, True, **extra_fields)
 
 class AppUser(AbstractBaseUser, PermissionsMixin):

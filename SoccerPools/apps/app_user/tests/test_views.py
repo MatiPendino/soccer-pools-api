@@ -62,7 +62,7 @@ class UserLoginViewTest(TestCase):
             'username': 'mati',
             'password': '12345678'
         }
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             self.client.post(self.login_url, data, format='json')
 
     def test_missing_login_data(self):
