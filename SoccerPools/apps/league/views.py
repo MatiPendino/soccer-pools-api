@@ -9,7 +9,10 @@ class LeagueListApiView(generics.ListAPIView):
         continent = self.request.query_params.get('continent')
         if continent != 'undefined':
             continent = int(continent)
-        leagues = League.objects.filter(state=True).order_by('name')
+        leagues = League.objects.filter(
+            state=True,
+            league_state__in=[League.NOT_STARTED_LEAGUE, League.PENDING_LEAGUE]
+        ).order_by('name')
         if continent in [
             League.AMERICAS, League.AFRICA, League.EUROPE, League.ASIA, League.OCEANIA, 
             League.TOURNAMENTS
