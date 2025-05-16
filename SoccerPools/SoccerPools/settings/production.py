@@ -2,7 +2,7 @@ from .base import *
 
 DEBUG = False
 
-ALLOWED_HOSTS = [config('ALLOWED_HOSTS').split(',')]
+ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
 INTERNAL_IPS = [
     '127.0.0.1',
