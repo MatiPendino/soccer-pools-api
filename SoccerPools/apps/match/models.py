@@ -9,11 +9,15 @@ class Match(BaseModel):
     PENDING_MATCH = 1
     FINALIZED_MATCH = 2
     CANCELLED_MATCH = 3
+    POSTPONED_MATCH = 4
+    PREPLAYED_MATCH = 5
     STATE_CODES = (
         (NOT_STARTED_MATCH, 'Not started'),
         (PENDING_MATCH, 'Pending'),
         (FINALIZED_MATCH, 'Finalized'),
-        (CANCELLED_MATCH, 'Cancelled')
+        (CANCELLED_MATCH, 'Cancelled'),
+        (POSTPONED_MATCH, 'Postponed'),
+        (PREPLAYED_MATCH, 'Preplayed'),
     )
 
     team_1 = models.ForeignKey(Team, related_name='matches_team_1', on_delete=models.CASCADE)
