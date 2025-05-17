@@ -178,7 +178,7 @@ def check_suspended_matches():
         short = fixture_status.get('short')
 
         if short in ['PST', 'CANC', 'ABD', 'WO', 'AWD', 'SUSP']:
-            subject = f'[ALERT] Match {match.id} ({match.api_match_id}) is {short}'
+            subject = f'[ALERT] Match {match} is {short}'
             message = (
                 f"Match ID: {match.id}\n"
                 f"API Match ID: {match.api_match_id}\n"
