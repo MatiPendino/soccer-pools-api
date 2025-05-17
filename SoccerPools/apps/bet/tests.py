@@ -1,6 +1,7 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.db.models import Sum
+from django.core.exceptions import ValidationError
 from apps.app_user.factories import AppUserFactory
 from apps.app_user.models import AppUser
 from apps.match.factories import MatchFactory, MatchResultFactory
@@ -235,7 +236,8 @@ class LeagueBetsMatchResultsCreateTest(APITestCase):
         data = {
             'league_slug': self.league.slug,
         }
-        response = self.client.post(self.url, data, format='json')
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        with self.assertRaises(ValidationError):
+            response = self.client.post(self.url, data, format='json')
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(BetLeague.objects.count(), 0)
