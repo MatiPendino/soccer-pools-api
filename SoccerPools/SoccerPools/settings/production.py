@@ -1,4 +1,7 @@
 from .base import *
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.celery import CeleryIntegration
 
 DEBUG = False
 
@@ -28,8 +31,23 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 
-
+# AWS Settings
 _AWS_EXPIRY = 86400  # 1 day
 AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": f"max-age={_AWS_EXPIRY}, s-maxage={_AWS_EXPIRY}, must-revalidate",
 }
+
+# Sentry settings
+sentry_sdk.init(
+    dsn=f'https://{config("SENTRY_URL")}.ingest.us.sentry.io/{config("SENTRY_KEY")}',
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    integrations=[DjangoIntegration(), CeleryIntegration()],
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
+    send_default_pii=True,
+    environment='production',
+)
