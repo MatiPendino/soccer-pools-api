@@ -307,7 +307,7 @@ class CheckSuspendedMatchesTest(TestCase):
 
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
-        self.assertIn(f'Match {self.match_1.id}', email.subject)
+        self.assertIn(f'Match ID: {self.match_1.id}', email.body)
         self.assertIn('Reported Status: SUSP', email.body)
 
 
