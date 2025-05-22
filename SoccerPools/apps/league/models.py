@@ -123,6 +123,10 @@ class Round(BaseModel):
         self.start_date = match_earliest_start_date.start_date
         self.save()
 
+    def get_league_name(self):
+        """Get the league name of the round"""
+        return self.league.name if self.league else None
+
     def update_round_winners_prizes(self, competition_name):
         """
             Update the winners of the round and distribute coins to the winners.

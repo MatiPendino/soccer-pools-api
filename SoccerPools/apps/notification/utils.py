@@ -93,6 +93,27 @@ def send_push_finalized_league(league):
             pass
 
 
+def send_push_finalized_round(round):
+    league = round.league
+    notification_title = f'{round.name} de la {round.get_league_name()} ha finalizado!'
+    notification_body = 'Mira tus resultados actualizados!'
+
+    fcm_tokens = FCMToken.objects.filter(
+        state=True, 
+        leagues=league
+    )
+    fcm = get_fcm_object()
+    for fcm_token in fcm_tokens:
+        try:
+            result = fcm.notify(
+                fcm_token=fcm_token.token_id, 
+                notification_title=notification_title, 
+                notification_body=notification_body
+            )
+        except:
+            pass
+
+
 def send_push_new_round_available(round_name, league):
     """Send a push notification to all league users when a new round is available"""
     notification_title = f'{round_name} disponible en la {league.name}!'

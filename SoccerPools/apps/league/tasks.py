@@ -4,8 +4,7 @@ from django.db import transaction
 from django.db.models import Q, Count, F
 from django.core.mail import mail_admins
 from apps.match.models import Match
-from apps.bet.models import BetRound
-from apps.notification.utils import send_push_winner, send_push_finalized_league
+from apps.notification.utils import send_push_finalized_league, send_push_finalized_round
 from .models import Round, League
 
 @shared_task
@@ -42,6 +41,7 @@ def finalize_pending_rounds():
     with transaction.atomic():
         for pending_round in pending_rounds:
             pending_round.update_round_winners_prizes(competition_name=pending_round.name)
+            send_push_finalized_round(round=pending_round)
             
         pending_rounds.update(round_state=Round.FINALIZED_ROUND)
 

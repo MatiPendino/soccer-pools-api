@@ -63,17 +63,17 @@ def finalize_matches():
             long = fixture_status.get('long')
 
             if long == 'Match Finished':
-                try:
+                # try:
                     # Send push notifications to inform about the finalized match
-                    send_push_nots_match(
-                        team_1_name=match.team_1.name, 
-                        team_2_name=match.team_2.name, 
-                        goals_home=goals_home, 
-                        goals_away=goals_away, 
-                        league=match.round.league
-                    )
-                except Exception as err:
-                    capture_message(f'Error sending push nots: {str(err)}', level="error")
+                #     send_push_nots_match(
+                #         team_1_name=match.team_1.name, 
+                #         team_2_name=match.team_2.name, 
+                #         goals_home=goals_home, 
+                #         goals_away=goals_away, 
+                #         league=match.round.league
+                #     )
+                # except Exception as err:
+                #     capture_message(f'Error sending push nots: {str(err)}', level="error")
                 original_match_result, was_created = MatchResult.objects.get_or_create(
                     original_result=True,
                     match=match,
