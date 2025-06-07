@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.db.models import Q
+from apps.bet.models import BetLeague
 from .models import Tournament, TournamentUser
 from .serializers import TournamentSerializer, TournamentUserSerializer
 from .utils import generate_default_logo
@@ -20,7 +21,13 @@ class TournamentViewSet(viewsets.ModelViewSet):
             user = request.user
             data = copy.copy(request.data)
             data['admin_tournament'] = user.id
-            data['league'] = int(data['league'])
+            
+            league_id = data.get('league', None)
+            if league_id is None or league_id == '':
+                last_user_visited_league = BetLeague.objects.get_last_visited_bet_league(user)
+                league_id = last_user_visited_league.get_league_id()
+
+            data['league'] = int(league_id)
             # If the user does not select a logo, the default logo will be selected
             # In case of an error the logo will be None
             if data['logo'] == 'null':

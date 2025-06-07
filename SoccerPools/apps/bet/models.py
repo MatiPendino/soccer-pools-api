@@ -36,6 +36,9 @@ class BetLeague(AbstractBetModel):
     def get_user_profile_image(self):
         return self.user.profile_image.url
     
+    def get_league_id(self):
+        return self.league.id
+    
 
 class BetRound(AbstractBetModel):
     round = models.ForeignKey(Round, related_name='bet_rounds', on_delete=models.CASCADE)
