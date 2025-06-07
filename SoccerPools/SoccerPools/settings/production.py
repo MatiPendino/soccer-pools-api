@@ -7,6 +7,8 @@ DEBUG = False
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS').split(',')
+
 INTERNAL_IPS = [
     '127.0.0.1',
 ]
