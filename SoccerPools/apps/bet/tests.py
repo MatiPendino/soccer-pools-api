@@ -241,3 +241,23 @@ class LeagueBetsMatchResultsCreateTest(APITestCase):
             response = self.client.post(self.url, data, format='json')
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(BetLeague.objects.count(), 0)
+
+    def test_no_enough_coins_existing_bet_league(self):
+        """
+            Test that when the user does not have enough coins but is 
+            already in that league, NO ValidationError is raised
+        """
+        self.user.coins = 0
+        self.user.save()
+        self.client.force_authenticate(user=self.user)
+        bet_league = BetLeagueFactory(user=self.user, league=self.league)
+        bet_round_1 = BetRound.objects.create(round=self.round_1, bet_league=bet_league)
+        bet_round_2 = BetRound.objects.create(round=self.round_2, bet_league=bet_league)
+        data = {
+            'league_slug': self.league.slug,
+        }
+        response = self.client.post(self.url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(BetLeague.objects.count(), 1)
+        self.assertEqual(BetRound.objects.count(), 2)

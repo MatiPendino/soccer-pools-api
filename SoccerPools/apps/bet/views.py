@@ -53,9 +53,6 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
         league = get_object_or_404(League, slug=request.data['league_slug'])
         user = request.user
 
-        if (user.coins < league.coins_cost):
-            raise ValidationError({'coins': 'Your coins are insufficient for joining this league'})
-
         # Filter all the NON finalized rounds
         rounds = Round.objects.filter(
             Q(round_state=Round.NOT_STARTED_ROUND) | 
@@ -67,9 +64,13 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
         # Deactivate if there is another bet_league instance with last_visited in True
         BetLeague.objects.deactivate_last_visited_bet_league(user)
 
+        existing_user_bet_league = BetLeague.objects.filter(state=True, league=league, user=user)
+        # If the user does not have enough coins and there is no existing BetLeague instance for this league and user, raise a ValidationError
+        if (user.coins < league.coins_cost) and not existing_user_bet_league.exists():
+            raise ValidationError({'coins': 'Your coins are insufficient for joining this league'})
+        
         # If there is already a BetLeague instance for this league and user, set 
         # is_last_visited_league to True and DO NOT CREATE ANY NEW BetLeague, BetRound or MatchResult 
-        existing_user_bet_league = BetLeague.objects.filter(state=True, league=league, user=user)
         if existing_user_bet_league.exists():
             existing_user_bet_league = existing_user_bet_league.first()
             existing_user_bet_league.is_last_visited_league = True
