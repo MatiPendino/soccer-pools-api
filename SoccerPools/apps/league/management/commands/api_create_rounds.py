@@ -44,7 +44,7 @@ class Command(BaseCommand):
                 league=league,
                 api_round_name=round,
                 defaults={
-                    'name': round,
+                    'name': f'Fecha {i}',
                     'number_round': i
                 }
             )
