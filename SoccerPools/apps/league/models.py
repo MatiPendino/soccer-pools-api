@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import F
 from utils import generate_unique_field_value
 from apps.base.models import BaseModel
+from .utils import get_coins_prize_player_based
 
 
 class League(BaseModel):
@@ -34,6 +35,11 @@ class League(BaseModel):
     COINS_SECOND_PRIZE_MULT = 100
     COINS_THIRD_PRIZE_MULT = 50
 
+    # Minimum Coin Prizes
+    MIN_COINS_FIRST_PRIZE = 10000
+    MIN_COINS_SECOND_PRIZE = 4000
+    MIN_COINS_THIRD_PRIZE = 2000
+
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, null=True, blank=True)
     logo = models.ImageField('Logo of the league', upload_to='league', blank=True, null=True)
@@ -46,12 +52,19 @@ class League(BaseModel):
     
     @property
     def coins_prizes(self):
-        bet_leagues_count = self.bet_leagues.count()
+        """Calculate the coin prizes for the league"""
 
+        # Calculate the prizes based on the number of bet leagues and the multipliers
+        bet_leagues_count = self.bet_leagues.count()
+        prize_first_player_based = bet_leagues_count * League.COINS_FIRST_PRIZE_MULT
+        prize_second_player_based = bet_leagues_count * League.COINS_SECOND_PRIZE_MULT
+        prize_third_player_based = bet_leagues_count * League.COINS_THIRD_PRIZE_MULT
+
+        # Return the prizes ensuring they are at least the minimum values
         return {
-            'coins_prize_first': bet_leagues_count * League.COINS_FIRST_PRIZE_MULT,
-            'coins_prize_second': bet_leagues_count * League.COINS_SECOND_PRIZE_MULT,
-            'coins_prize_third': bet_leagues_count * League.COINS_THIRD_PRIZE_MULT,
+            'coins_prize_first': max(prize_first_player_based, League.MIN_COINS_FIRST_PRIZE),
+            'coins_prize_second': max(prize_second_player_based, League.MIN_COINS_SECOND_PRIZE),
+            'coins_prize_third': max(prize_third_player_based, League.MIN_COINS_THIRD_PRIZE),
         }
 
     def __str__(self):
@@ -78,6 +91,11 @@ class Round(BaseModel):
     COINS_SECOND_PRIZE_MULT = 20
     COINS_THIRD_PRIZE_MULT = 10
 
+    # Minimum Coin Prizes
+    MIN_COINS_FIRST_PRIZE = 1000
+    MIN_COINS_SECOND_PRIZE = 400
+    MIN_COINS_THIRD_PRIZE = 200
+
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True, null=True)
     number_round = models.PositiveSmallIntegerField('Number of round', blank=True, null=True)
@@ -93,16 +111,29 @@ class Round(BaseModel):
 
     @property
     def coins_prizes(self):
+        """Calculate the coin prizes for the round"""
+
+        # Calculate the prizes based on the number of bet rounds and the multipliers
         bet_rounds_count = self.bet_rounds.count()
-        coins_prize_first = bet_rounds_count * (
-            Round.COINS_FIRST_PRIZE_MULT if not self.is_general_round else League.COINS_FIRST_PRIZE_MULT
+        prize_first_player_based = get_coins_prize_player_based(
+            bet_rounds_count, self.is_general_round, Round.COINS_FIRST_PRIZE_MULT, League.COINS_FIRST_PRIZE_MULT
         )
-        coins_prize_second = bet_rounds_count * (
-            Round.COINS_SECOND_PRIZE_MULT if not self.is_general_round else League.COINS_SECOND_PRIZE_MULT
+        prize_second_player_based = get_coins_prize_player_based(
+            bet_rounds_count, self.is_general_round, Round.COINS_SECOND_PRIZE_MULT, League.COINS_SECOND_PRIZE_MULT
         )
-        coins_prize_third = bet_rounds_count * (
-            Round.COINS_THIRD_PRIZE_MULT if not self.is_general_round else League.COINS_THIRD_PRIZE_MULT
+        prize_third_player_based = get_coins_prize_player_based(
+            bet_rounds_count, self.is_general_round, Round.COINS_THIRD_PRIZE_MULT, League.COINS_THIRD_PRIZE_MULT
         )
+
+        # Ensure the prizes are at least the minimum values, considering if it is a general round or not
+        if self.is_general_round:
+            coins_prize_first = max(prize_first_player_based, League.MIN_COINS_FIRST_PRIZE)
+            coins_prize_second = max(prize_second_player_based, League.MIN_COINS_SECOND_PRIZE)
+            coins_prize_third = max(prize_third_player_based, League.MIN_COINS_THIRD_PRIZE)
+        else:
+            coins_prize_first = max(prize_first_player_based, Round.MIN_COINS_FIRST_PRIZE)
+            coins_prize_second = max(prize_second_player_based, Round.MIN_COINS_SECOND_PRIZE)
+            coins_prize_third = max(prize_third_player_based, Round.MIN_COINS_THIRD_PRIZE)
 
         return {
             'coins_prize_first': coins_prize_first,
