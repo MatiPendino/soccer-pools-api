@@ -2,6 +2,7 @@ from .base import *
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.celery import CeleryIntegration
+from django.core.exceptions import DisallowedHost
 
 DEBUG = False
 
@@ -46,6 +47,17 @@ AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": f"max-age={_AWS_EXPIRY}, s-maxage={_AWS_EXPIRY}, must-revalidate",
 }
 
+def before_send(event, hint):
+    # Check if this event was triggered by an exception
+    if 'exc_info' in hint:
+        exc_type, exc_value, tb = hint['exc_info']
+
+        # If the exception is DisallowedHost (invalid Host header), ignore this event
+        if isinstance(exc_value, DisallowedHost):
+            return None
+
+    return event 
+
 # Sentry settings
 sentry_sdk.init(
     dsn=f'https://{config("SENTRY_URL")}.ingest.us.sentry.io/{config("SENTRY_KEY")}',
@@ -54,4 +66,5 @@ sentry_sdk.init(
     profiles_sample_rate=0.1,
     send_default_pii=True,
     environment='production',
+    before_send=before_send,
 )
