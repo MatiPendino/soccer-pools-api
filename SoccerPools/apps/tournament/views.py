@@ -9,7 +9,7 @@ from django.db.models import Q
 from apps.bet.models import BetLeague
 from .models import Tournament, TournamentUser
 from .serializers import TournamentSerializer, TournamentUserSerializer
-from .utils import generate_default_logo
+from .utils import generate_default_logo, send_tournament_user_notification
 
 class TournamentViewSet(viewsets.ModelViewSet):
     serializer_class = TournamentSerializer
@@ -106,12 +106,14 @@ class TournamentUserViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='update_tournament_user_state')
     def update_tournament_user_state(self, request, pk=None):
+        user = request.user
         tournament_user_id = pk
         tournament_state = request.data.get('tournament_state')
 
         tournament_user = get_object_or_404(TournamentUser, id=tournament_user_id)
         tournament_user.tournament_user_state = tournament_state
         tournament_user.save()
+        send_tournament_user_notification(user, tournament_user, tournament_state)
 
         serializer = self.get_serializer(tournament_user)
         return Response(serializer.data)

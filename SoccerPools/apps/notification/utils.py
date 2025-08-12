@@ -133,3 +133,49 @@ def send_push_new_round_available(round_name, league):
             )
         except:
             pass
+
+
+def send_push_new_tournament_user_request(tournament_user_admin, tournament_name, requesting_user_username):
+    """Send a push notification to the tournament admin when a new user requests to join the tournament"""
+    notification_title = f'{tournament_name} - Nueva solicitud de usuario'
+    notification_body = f'{requesting_user_username} ha solicitado unirse al torneo'
+
+    fcm_token = FCMToken.objects.filter(
+        state=True, 
+        user=tournament_user_admin
+    ).first()
+    if not fcm_token:
+        return
+    
+    fcm = get_fcm_object()
+    try:
+        result = fcm.notify(
+            fcm_token=fcm_token.token_id, 
+            notification_title=notification_title, 
+            notification_body=notification_body
+        )
+    except:
+        pass
+
+
+def send_push_tournament_user_accepted(tournament_name, user):
+    """Send a push notification to the user when they are accepted into a tournament"""
+    notification_title = f'{tournament_name} - Solicitud aceptada'
+    notification_body = f'Has sido aceptado en el torneo {tournament_name}'
+
+    fcm_token = FCMToken.objects.filter(
+        state=True, 
+        user=user
+    ).first()
+    if not fcm_token:
+        return
+    
+    fcm = get_fcm_object()
+    try:
+        result = fcm.notify(
+            fcm_token=fcm_token.token_id, 
+            notification_title=notification_title, 
+            notification_body=notification_body
+        )
+    except:
+        pass
