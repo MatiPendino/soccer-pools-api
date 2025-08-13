@@ -5,6 +5,8 @@ from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.apps import apps
 from django.utils import timezone
+from django.conf import settings
+from apps.base.models import BaseModel
 from .validations import validate_no_spaces
 
 class AppUserManager(BaseUserManager):
@@ -79,3 +81,30 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
             match_results.update(state=False)
             bet_rounds.update(state=False)
             bet_leagues.update(state=False)
+
+
+class CoinGrant(BaseModel):
+    AD_REWARD_DAILY_CAP = 10
+    AD_REWARD_AMOUNT = 10 if settings.DEBUG else 1000
+    APP_REVIEW_AMOUNT = 2000
+
+    AD_REWARD = 0
+    APP_REVIEW = 1
+    DAILY = 2
+    REFERRAL = 3
+    LEAGUE_WINNER = 4
+    REWARD_TYPES = [
+        (AD_REWARD, 'Ad reward'), 
+        (APP_REVIEW, 'App review'),
+        (DAILY, 'Daily'), 
+        (REFERRAL, 'Referral'),
+        (LEAGUE_WINNER, 'League winner'),
+    ]
+
+    user = models.ForeignKey(AppUser, on_delete=models.CASCADE, related_name='coin_grants')
+    reward_type = models.PositiveSmallIntegerField(choices=REWARD_TYPES)
+    amount = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0)])
+    description = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.user.username} - {self.get_reward_type_display()}'
