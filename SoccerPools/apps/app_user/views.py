@@ -15,13 +15,12 @@ from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render
-from django.http import JsonResponse
-from django.db.models import F
 from utils import generate_unique_field_value
 from apps.bet.models import BetLeague
 from apps.league.serializers import LeagueSerializer
 from .models import AppUser
-from .serializers import UserLoginSerializer, UserRegisterSerializer, UserSerializer
+from .serializers import UserLoginSerializer, UserRegisterSerializer, UserSerializer, AddCoinsSerializer
+from .services import grant_coins
 
 
 class UserRegister(APIView):
@@ -76,15 +75,15 @@ class UserViewSet(ViewSet):
     @action(detail=False, methods=['post'], url_path='add_coins')
     def add_coins(self, request):
         """Add coins to the user"""
-        coins = request.data.get('coins')
-        if coins is None:
-            raise ValidationError({'coins': 'Coins were not provided'})
+        serializer = AddCoinsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        new_balance = grant_coins(
+            user=request.user,
+            reward_type=serializer.validated_data['reward_type'],
+            coins=serializer.validated_data['coins']
+        )
 
-        user = request.user
-        user.coins = F('coins') + int(coins)
-        user.save()
-        user.refresh_from_db()
-        return Response({'coins': user.coins}, status=status.HTTP_200_OK)
+        return Response({'coins': new_balance}, status=status.HTTP_200_OK)
     
 
 class UserDestroyApiView(APIView):

@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
+from apps.app_user.models import CoinGrant
 from apps.app_user.factories import AppUserFactory
 from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
 from apps.bet.factories import BetRoundFactory, BetLeagueFactory
@@ -127,16 +128,62 @@ class UserViewSetTest(APITestCase):
 
     def test_add_coins(self):
         add_coins_url = f'{self.url}add_coins/'
-        response = self.client.post(add_coins_url, {'coins': 1000})
+        response = self.client.post(add_coins_url, {'coins': CoinGrant.AD_REWARD_AMOUNT})
         self.user.refresh_from_db()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(self.user.coins, 4000)
+        self.assertEqual(self.user.coins, 3010)
 
-    def test_add_coins_invalid(self):
+    def test_add_coins_no_coins(self):
         add_coins_url = f'{self.url}add_coins/'
-        with self.assertRaises(ValidationError):
-            response = self.client.post(add_coins_url)
+        response = self.client.post(add_coins_url)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.coins, 3000)
+
+    def test_add_coins_invalid_reward_type(self):
+        add_coins_url = f'{self.url}add_coins/'
+        response = self.client.post(add_coins_url, {'coins': 10, 'reward_type': 10})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.coins, 3000)
+
+    def test_add_coins_invalid_coins(self):
+        add_coins_url = f'{self.url}add_coins/'
+        response = self.client.post(add_coins_url, {'coins': 5, 'reward_type': CoinGrant.AD_REWARD})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.coins, 3000)
+
+    def test_add_coins_existing_app_review_reward(self):
+        add_coins_url = f'{self.url}add_coins/'
+        CoinGrant.objects.create(
+            user=self.user,
+            reward_type=CoinGrant.APP_REVIEW,
+            amount=CoinGrant.APP_REVIEW_AMOUNT
+        )
+        response = self.client.post(add_coins_url, {
+            'coins': CoinGrant.APP_REVIEW_AMOUNT, 'reward_type': CoinGrant.APP_REVIEW
+        })
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.coins, 3000)
+
+    def test_add_coins_ad_reward_over_daily_cap(self):
+        add_coins_url = f'{self.url}add_coins/'
+        for _ in range(CoinGrant.AD_REWARD_DAILY_CAP):
+            CoinGrant.objects.create(
+                user=self.user, reward_type=CoinGrant.AD_REWARD, amount=CoinGrant.AD_REWARD_AMOUNT
+            )
+        response = self.client.post(add_coins_url, {
+            'coins': CoinGrant.AD_REWARD_AMOUNT, 'reward_type': CoinGrant.AD_REWARD
+        })
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.user.refresh_from_db()
         self.assertEqual(self.user.coins, 3000)
 

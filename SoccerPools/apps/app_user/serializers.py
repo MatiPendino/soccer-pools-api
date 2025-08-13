@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model, authenticate
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
+from .models import CoinGrant
 
 User = get_user_model()
 
@@ -38,3 +39,23 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'name', 'last_name', 'profile_image', 'coins')
+
+
+class AddCoinsSerializer(serializers.Serializer):
+    reward_type = serializers.ChoiceField(
+        choices=[CoinGrant.AD_REWARD, CoinGrant.APP_REVIEW], 
+        default=CoinGrant.AD_REWARD
+    )
+    coins = serializers.IntegerField()
+
+    def validate(self, data):
+        reward_type = data.get('reward_type')
+        coins = data.get('coins')
+
+        if reward_type not in [CoinGrant.AD_REWARD, CoinGrant.APP_REVIEW]:
+            raise serializers.ValidationError({'type': 'Invalid reward type'})
+        
+        if coins != CoinGrant.AD_REWARD_AMOUNT and coins != CoinGrant.APP_REVIEW_AMOUNT:
+            raise serializers.ValidationError({'coins': 'Invalid amount of coins'})
+        
+        return data
