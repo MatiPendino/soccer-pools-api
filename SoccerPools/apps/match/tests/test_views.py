@@ -1,6 +1,7 @@
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
 from apps.bet.factories import BetRoundFactory, BetLeagueFactory
 from apps.match.models import MatchResult
@@ -60,10 +61,27 @@ class MatchResultsUpdateTest(APITestCase):
         self.team_3 = TeamFactory(leagues=[self.league], name='River Plate')
         self.bet_league = BetLeagueFactory(league=self.league, user=self.user)
         self.bet_round = BetRoundFactory(round=self.round, bet_league=self.bet_league)
-        self.match_1 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_2)
-        self.match_2 = MatchFactory(round=self.round, team_1=self.team_1, team_2=self.team_3)
+        self.match_1 = MatchFactory(
+            round=self.round, 
+            team_1=self.team_1, 
+            team_2=self.team_2,
+            start_date=timezone.now() + timezone.timedelta(hours=1)
+        )
+        self.match_2 = MatchFactory(
+            round=self.round, 
+            team_1=self.team_1, 
+            team_2=self.team_3,
+            start_date=timezone.now() + timezone.timedelta(hours=2)
+        )
+        self.match_already_started = MatchFactory(
+            round=self.round,
+            team_1=self.team_2,
+            team_2=self.team_3,
+            start_date=timezone.now() - timezone.timedelta(hours=1)
+        )
         self.match_result_1 = MatchResultFactory(bet_round=self.bet_round, match=self.match_1)
         self.match_result_2 = MatchResultFactory(bet_round=self.bet_round, match=self.match_2)
+        self.match_result_3 = MatchResultFactory(bet_round=self.bet_round, match=self.match_already_started)
         self.url = '/api/matches/match_results_update/'
 
     def test_updated_results(self):
@@ -76,6 +94,10 @@ class MatchResultsUpdateTest(APITestCase):
             {
                 'badge_team_1': '', 'badge_team_2': '', 'goals_team_1': 5, 'team_2': self.team_3.name,
                 'goals_team_2': 5, 'id': self.match_result_2.id, 'team_1': self.team_1.name,
+            },
+            {
+                'badge_team_1': '', 'badge_team_2': '', 'goals_team_1': 1, 'team_2': self.team_3.name,
+                'goals_team_2': 1, 'id': self.match_result_3.id, 'team_1': self.team_2.name,
             }
         ]
 
@@ -88,6 +110,7 @@ class MatchResultsUpdateTest(APITestCase):
 
         self.match_result_1.refresh_from_db()
         self.match_result_2.refresh_from_db()
+        self.match_result_3.refresh_from_db()
         self.assertEqual(
             self.match_result_1.goals_team_1, 
             matchResults[0].get('goals_team_1')
@@ -96,6 +119,7 @@ class MatchResultsUpdateTest(APITestCase):
             self.match_result_2.goals_team_2, 
             matchResults[1].get('goals_team_2')
         )
+        self.assertEqual(self.match_result_3.goals_team_2, None)
 
 
 class MatchResultOriginalTest(APITestCase):

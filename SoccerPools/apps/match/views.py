@@ -1,7 +1,8 @@
 from rest_framework import status, permissions, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.shortcuts import get_list_or_404, get_object_or_404
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from .serializers import MatchResultSerializer
 from .models import MatchResult, Match
 
@@ -27,7 +28,11 @@ class MatchResultsUpdateApiView(APIView):
         match_results_data = request.data.get('matchResults')
 
         match_results_ids = [match_result['id'] for match_result in match_results_data]
-        match_results = get_list_or_404(MatchResult, id__in=match_results_ids)
+        match_results = MatchResult.objects.select_related('match').filter(
+            id__in=match_results_ids, 
+            match__start_date__gt=timezone.now(),
+            state=True
+        )
         
         # Create a mapping of match result objects by ID
         match_result_map = {match_result.id: match_result for match_result in match_results}
