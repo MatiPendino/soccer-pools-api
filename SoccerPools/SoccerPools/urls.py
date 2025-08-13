@@ -1,4 +1,3 @@
-from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from decouple import config
 from django.contrib import admin
 from django.urls import path, re_path, include
@@ -9,9 +8,6 @@ from django.views.static import serve
 urlpatterns = [
     path(f'{config("ADMIN_URL", "admin")}/doc/', include('django.contrib.admindocs.urls')),
     path(f'{config("ADMIN_URL", "admin")}/', admin.site.urls),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('api/', include('djoser.urls')),
     path('api/', include('djoser.urls.jwt')),
     path('api/', include('apps.api.urls')),
@@ -27,6 +23,12 @@ urlpatterns += [
 
 if settings.DEBUG:
     from debug_toolbar.toolbar import debug_toolbar_urls
+    from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
     urlpatterns += debug_toolbar_urls()
+    urlpatterns += [
+        path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+        path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+        path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    ]
 
