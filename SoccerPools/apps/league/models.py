@@ -150,9 +150,18 @@ class Round(BaseModel):
         super().save(*args, **kwargs)
 
     def update_start_date(self):
-        match_earliest_start_date = self.matches.order_by('start_date').first()
-        self.start_date = match_earliest_start_date.start_date
-        self.save()
+        """Update the Round start_date based on its earliest match start_date"""
+        from apps.match.models import Match 
+
+        earliest_match_dt = self.matches.filter(
+            match_state__in=[Match.NOT_STARTED_MATCH, Match.PENDING_MATCH, Match.FINALIZED_MATCH],
+            start_date__isnull=False,
+            state=True,
+        ).order_by('start_date').values_list('start_date', flat=True).first()
+
+        if earliest_match_dt is not None and self.start_date != earliest_match_dt:
+            self.start_date = earliest_match_dt
+            self.save(update_fields=['start_date'])
 
     def get_league_name(self):
         """Get the league name of the round"""
