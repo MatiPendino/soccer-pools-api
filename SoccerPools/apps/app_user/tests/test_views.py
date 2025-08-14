@@ -94,28 +94,6 @@ class UserLogoutViewTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class UserViewTest(TestCase):
-    def setUp(self):
-        self.view_url = reverse('user_view')
-        self.client = APIClient()
-
-    def test_view_user_logged(self):
-        user = User.objects.create_user(
-            username='mati',
-            email='email@gmail.com',
-            name='Mati',
-            last_name='Pendino',
-            password='123456798'
-        )
-        self.client.force_authenticate(user=user)
-        response = self.client.get(self.view_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_view_user_not_logged(self):
-        response = self.client.get(self.view_url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
 class UserViewSetTest(APITestCase):
     def setUp(self):
         self.client = APIClient()

@@ -51,16 +51,7 @@ class UserLogout(APIView):
         logout(request)
         return Response(status=status.HTTP_200_OK)
     
-
-class LegacyUserApiView(APIView):
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def get(self, request):
-        serializer = UserSerializer(request.user)
-        response = Response(serializer.data, status=status.HTTP_200_OK)
-        return response
-    
-        
+ 
 class UserViewSet(ViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = AppUser.objects.all()
