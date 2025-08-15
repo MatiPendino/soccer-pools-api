@@ -4,12 +4,12 @@ from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework import permissions, status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
+from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
@@ -19,7 +19,9 @@ from utils import generate_unique_field_value
 from apps.bet.models import BetLeague
 from apps.league.serializers import LeagueSerializer
 from .models import AppUser
-from .serializers import UserLoginSerializer, UserRegisterSerializer, UserSerializer, AddCoinsSerializer
+from .serializers import (
+    UserLoginSerializer, UserRegisterSerializer, UserSerializer, AddCoinsSerializer, UserEditableSerializer
+)
 from .services import grant_coins
 
 
@@ -115,6 +117,15 @@ class LeagueUser(APIView):
         league_serializer = LeagueSerializer(league)
 
         return Response(league_serializer.data)
+    
+
+class UserEditable(RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserEditableSerializer
+    parser_classes = [MultiPartParser, FormParser]  # Enable image upload
+
+    def get_object(self):
+        return self.request.user
 
 
 class GoogleLoginView(APIView):

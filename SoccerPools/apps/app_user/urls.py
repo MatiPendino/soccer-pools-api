@@ -12,6 +12,7 @@ urlpatterns = [
     path('user_destroy/', UserDestroyApiView.as_view(), name='user_destroy'),
     path('user_in_league/', UserInLeague.as_view(), name='user_in_league'),
     path('user_league/', LeagueUser.as_view(), name='league_users'),
+    path('user_editable/', UserEditable.as_view(), name='user_editable'),
     path('android_google_oauth2/', GoogleLoginView.as_view(), name='android-google-oauth2'),
     path('remove_user/', remove_user, name='remove_user'),
     path('activate/<uid>/<token>/', activate_user, name='activate-user'),
