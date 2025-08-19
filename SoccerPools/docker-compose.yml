@@ -3,7 +3,7 @@ services:
     build: .
     command: >
       sh -c "python manage.py migrate &&
-             gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 90 SoccerPools.wsgi:application"
+             gunicorn --bind 0.0.0.0:8000 --workers 2 --timeout 30 --graceful-timeout 30 --keep-alive 2 --max-requests 500 --max-requests-jitter 50 SoccerPools.wsgi:application"
     volumes:
       - .:/app
     ports:
@@ -32,7 +32,7 @@ services:
 
   celery:
     build: .
-    command: celery -A SoccerPools worker --loglevel=info
+    command: celery -A SoccerPools worker --loglevel=info --concurrency=1 --max-tasks-per-child=200 --prefetch-multiplier=1
     volumes:
       - .:/app
     env_file:
