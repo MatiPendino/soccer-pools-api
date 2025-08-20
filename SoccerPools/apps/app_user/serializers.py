@@ -19,7 +19,9 @@ class UserEditableSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'name', 'last_name', 'profile_image')
+        fields = (
+            'username', 'email', 'name', 'last_name', 'profile_image', 'instagram_username', 'twitter_username'
+        )
 
     def validate_username(self, value):
         if not value:

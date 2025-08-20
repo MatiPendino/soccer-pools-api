@@ -8,7 +8,7 @@ class AppUserResources(resources.ModelResource):
         model = AppUser
 
 class AppUserAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    search_fields = ('username', 'name', 'last_name', 'email')
+    search_fields = ('username', 'name', 'last_name', 'email', 'instagram_username', 'twitter_username')
     list_display = ('username', 'email', 'name', 'last_name', 'coins')
     resource_class = AppUserResources
 
