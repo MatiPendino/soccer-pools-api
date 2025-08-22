@@ -90,12 +90,15 @@ def finalize_matches():
 
                 with transaction.atomic(): 
                     for match_result in user_match_results:
-                        match_result.points = get_match_result_points(
+                        points = get_match_result_points(
                             user_goals_team_1=match_result.goals_team_1,
                             user_goals_team_2=match_result.goals_team_2,
                             original_goals_team_1=original_match_result.goals_team_1,
                             original_goals_team_2=original_match_result.goals_team_2
                         )
+                        match_result.points = points
+                        if points == 3:
+                            match_result.is_exact = True
                         match_result.save()
                     match.match_state = Match.FINALIZED_MATCH
                     match.save()

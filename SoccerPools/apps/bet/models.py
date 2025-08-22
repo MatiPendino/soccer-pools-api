@@ -69,6 +69,26 @@ class BetRound(AbstractBetModel):
 
         return match_points
     
+    @property
+    def exact_results(self):
+        if self.round.is_general_round:
+            if self.bet_league:
+                exact_results = BetRound.objects.filter(
+                    state=True,
+                    bet_league__user=self.bet_league.user,
+                    round__league=self.round.league,
+                    round__is_general_round=False
+                ).aggregate(total_exact=models.Count(
+                    'match_results',
+                    filter=models.Q(match_results__is_exact=True, match_results__state=True)
+                ))['total_exact'] or 0
+            else:
+                exact_results = 0
+        else:
+            exact_results = self.match_results.filter(is_exact=True, state=True).count()
+            
+        return exact_results
+    
     def get_user(self):
         return self.bet_league.user
 

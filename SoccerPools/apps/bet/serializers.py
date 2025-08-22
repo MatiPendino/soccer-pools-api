@@ -12,6 +12,7 @@ class BetRoundSerializer(serializers.ModelSerializer):
             'username': instance.bet_league.get_user_username() if instance.bet_league else '',
             'profile_image': instance.bet_league.get_user_profile_image() if instance.bet_league else '',
             'points': instance.points,
+            'exact_results': instance.exact_results,
             'operation_code': instance.operation_code,
             'round_id': instance.round.id
         }

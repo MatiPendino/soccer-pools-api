@@ -1,5 +1,5 @@
 from django.db.models import (
-    Sum, IntegerField, F, Q, ExpressionWrapper, Value, Manager
+    Sum, IntegerField, F, Q, ExpressionWrapper, Value, Manager, Count
 )
 from django.shortcuts import get_object_or_404
 from django.db.models.functions import Coalesce
@@ -27,7 +27,18 @@ class BetRoundManager(Manager):
                             'bet_league__bet_rounds__match_results__points',
                             filter=(
                                 Q(round__is_general_round=True) &
-                                Q(bet_league__bet_rounds__state=True) &
+                                Q(bet_league__bet_rounds__round__league=F('round__league'))
+                            )
+                        ), Value(0),
+                        output_field=IntegerField()
+                    ), output_field=IntegerField()
+                ),
+                exact_results_count=ExpressionWrapper(
+                    Coalesce(
+                        Count(
+                            'bet_league__bet_rounds__match_results__is_exact',
+                            filter=(
+                                Q(bet_league__bet_rounds__match_results__is_exact=True) &
                                 Q(bet_league__bet_rounds__round__league=F('round__league'))
                             )
                         ), Value(0),
@@ -47,10 +58,22 @@ class BetRoundManager(Manager):
                         ), Value(0),
                         output_field=IntegerField()
                     ), output_field=IntegerField()
+                ),
+                exact_results_count=ExpressionWrapper(
+                    Coalesce(
+                        Count(
+                            'match_results__is_exact',
+                            filter=(
+                                Q(match_results__is_exact=True)
+                            )
+                        ), Value(0),
+                        output_field=IntegerField()
+                    ), output_field=IntegerField()
                 )
             )
+            
 
-        return bet_rounds.order_by('-matches_points')
+        return bet_rounds.order_by('-matches_points', '-exact_results_count')
     
 
 class BetLeagueManager(Manager):

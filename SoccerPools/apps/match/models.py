@@ -51,6 +51,7 @@ class MatchResult(BaseModel):
     bet_round = models.ForeignKey(BetRound, related_name='match_results', on_delete=models.CASCADE, null=True, blank=True)
     match = models.ForeignKey(Match, related_name='match_results', on_delete=models.CASCADE)
     points = models.PositiveSmallIntegerField(default=0)
+    is_exact = models.BooleanField('Exact result', default=False)
 
     def __str__(self):
         nteam_1, nteam_2 = self.match.get_team_names()

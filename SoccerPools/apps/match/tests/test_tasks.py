@@ -175,6 +175,9 @@ class FinalizeMatchesTest(TestCase):
         self.assertEqual(self.match_result_3.points, 1)
         self.assertEqual(self.match_result_4.points, 0)
         self.assertEqual(self.match_result_5.points, 0)
+        self.assertEqual(self.match_result_1.is_exact, True)
+        self.assertEqual(self.match_result_3.is_exact, False)
+        self.assertEqual(self.match_result_4.is_exact, False)
 
 
 class UpdateMatchesStartDate(TestCase):
