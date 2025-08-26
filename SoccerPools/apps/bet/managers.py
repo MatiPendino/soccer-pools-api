@@ -73,7 +73,7 @@ class BetRoundManager(Manager):
             )
             
 
-        return bet_rounds.order_by('-matches_points', '-exact_results_count')
+        return bet_rounds.order_by('-matches_points', '-exact_results_count', 'id')
     
 
 class BetLeagueManager(Manager):

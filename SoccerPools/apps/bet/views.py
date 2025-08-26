@@ -11,9 +11,32 @@ from apps.tournament.models import TournamentUser
 from .serializers import BetRoundSerializer
 from .models import BetRound, BetLeague
 from .utils import generate_response_data
+from .pagination import BetRoundLeadersCursorPagination
+
+class BetRoundResultsLegacyApiView(generics.ListAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = None
+    serializer_class = BetRoundSerializer
+
+    def get_queryset(self,):
+        round_slug = self.kwargs.get('round_slug')
+        tournament_id = self.kwargs.get('tournament_id')
+        bet_rounds = BetRound.objects.with_matches_points(round_slug=round_slug)
+
+        if tournament_id != 0:
+            tournament_users = TournamentUser.objects.filter(
+                tournament__id=tournament_id,
+                tournament_user_state=TournamentUser.ACCEPTED
+            )
+            users = [tournament_user.user for tournament_user in tournament_users]
+
+            bet_rounds = bet_rounds.filter(bet_league__user__in=users)
+
+        return bet_rounds
 
 class BetRoundResultsApiView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = BetRoundLeadersCursorPagination
     serializer_class = BetRoundSerializer
 
     def get_queryset(self,):
