@@ -1,4 +1,5 @@
 import requests
+import logging
 from decouple import config
 from rest_framework import permissions, status
 from rest_framework.views import APIView
@@ -17,9 +18,11 @@ from django.shortcuts import render
 from utils import generate_unique_field_value
 from apps.bet.models import BetLeague
 from apps.league.serializers import LeagueSerializer
-from .models import AppUser
+from .models import AppUser, CoinGrant
 from .serializers import UserSerializer, AddCoinsSerializer, UserEditableSerializer
 from .services import grant_coins
+
+logger = logging.getLogger(__name__)
  
 class UserViewSet(ViewSet):
     permission_classes = (permissions.IsAuthenticated,)
@@ -37,10 +40,12 @@ class UserViewSet(ViewSet):
         """Add coins to the user"""
         serializer = AddCoinsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        new_balance = grant_coins(
-            user=request.user,
-            reward_type=serializer.validated_data['reward_type'],
-            coins=serializer.validated_data['coins']
+        reward_type = serializer.validated_data['reward_type']
+        coins = serializer.validated_data['coins']
+        new_balance = grant_coins(user=request.user, reward_type=reward_type, coins=coins)
+        logger.info(
+            'Granted %s coins to user %s for %s', 
+            coins, request.user.id, CoinGrant.REWARD_TYPES[reward_type][1]
         )
 
         return Response({'coins': new_balance}, status=status.HTTP_200_OK)
@@ -56,6 +61,7 @@ class UserDestroyApiView(APIView):
         if not user or not user.is_authenticated:
             raise NotFound('User not found or not authenticated')
 
+        logger.info('User %s requested account deletion', user.username)
         user.remove_user()
         return Response({'success': 'User removed successfully'}, status=status.HTTP_204_NO_CONTENT)
 
@@ -95,6 +101,11 @@ class UserEditable(RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+    
+    def perform_update(self, serializer):
+        user = serializer.save()
+        logger.info('Profile updated for user %s', user.username)
+        return user
 
 
 class GoogleLoginView(APIView):
@@ -110,6 +121,7 @@ class GoogleLoginView(APIView):
         user_info_response = requests.get(user_info_url, headers=headers)
 
         if user_info_response.status_code != status.HTTP_200_OK:
+            logger.error('Failed to fetch user info from Google: %s', user_info_response.text)
             raise ValidationError({'User': 'Failed to retrieve user info'})
 
         user_info = user_info_response.json()
@@ -129,11 +141,14 @@ class GoogleLoginView(APIView):
         )
 
         if created or not user.profile_image:
+            logger.info('Creating new user or updating profile image for user %s', user.id)
             response = requests.get(profile_pic)
             if response.status_code == status.HTTP_200_OK:
                 image_file = ContentFile(response.content)
                 user.profile_image.save(f"{user.username}_profile.jpg", image_file)
                 user.save()
+        else:
+            logger.info('Existing user logged in: %s', user.id)
 
         refresh = RefreshToken.for_user(user)
         tokens = {
@@ -167,8 +182,10 @@ def activate_user(request, uid, token):
     })
 
     if response.status_code == 204:
+        logger.info('User activated successfully: %s', uid)
         return render(request, 'email/activation_success.html')
     else:
+        logger.error('Failed to activate user %s: %s', uid, response.text)
         return render(request, 'email/activation_error.html')
 
 
@@ -201,9 +218,10 @@ def password_reset_confirm_view(request, uid, token):
             )
 
             if response.status_code == 204:
+                logger.info('Password reset successfully for user: %s', uid)
                 context['success'] = True
             else:
-                print()
+                logger.error('Password reset failed for user %s: %s', uid, response.text)
                 context['error'] = response.json().get('detail', 'An error occurred.')
 
     return render(request, 'email/password_reset_form.html', context)

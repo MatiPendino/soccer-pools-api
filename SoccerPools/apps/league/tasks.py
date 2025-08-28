@@ -1,3 +1,4 @@
+import logging
 from celery import shared_task
 from django.utils.timezone import now, timedelta
 from django.db import transaction
@@ -6,6 +7,8 @@ from django.core.mail import mail_admins
 from apps.match.models import Match
 from apps.notification.utils import send_push_finalized_league, send_push_finalized_round
 from .models import Round, League
+
+logger = logging.getLogger(__name__)
 
 @shared_task
 def check_upcoming_rounds():
@@ -42,6 +45,7 @@ def finalize_pending_rounds():
         for pending_round in pending_rounds:
             pending_round.update_round_winners_prizes(competition_name=pending_round.name)
             send_push_finalized_round(round=pending_round)
+            logger.info('Finalized round %s in league %s', pending_round.name, pending_round.get_league_name())
             
         pending_rounds.update(round_state=Round.FINALIZED_ROUND)
 
@@ -67,6 +71,10 @@ def check_finalized_leagues():
     
     for league in leagues:
         if league.is_cup:
+            logger.warning(
+                'League %s (%s) is a cup and has all rounds finalized. Admin intervention required.', 
+                league.name, league.id
+            )
             subject = f'[ALERT] Cup {league.name} {league.id} has all the rounds FINALIZED'
             message = (
                 f"League ID: {league.id}\n"
@@ -82,3 +90,4 @@ def check_finalized_leagues():
 
                 league.league_state = League.FINALIZED_LEAGUE
                 league.save()
+                logger.info('Finalized league %s', league.name)

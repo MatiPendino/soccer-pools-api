@@ -1,4 +1,5 @@
 import copy
+import logging
 from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,6 +12,7 @@ from .models import Tournament, TournamentUser
 from .serializers import TournamentSerializer, TournamentUserSerializer
 from .utils import generate_default_logo, send_tournament_user_notification
 
+logger = logging.getLogger(__name__)
 class TournamentViewSet(viewsets.ModelViewSet):
     serializer_class = TournamentSerializer
     permission_classes = (permissions.IsAuthenticated,)
@@ -48,6 +50,8 @@ class TournamentViewSet(viewsets.ModelViewSet):
                 tournament_user_state=TournamentUser.ACCEPTED
             )
             headers = self.get_success_headers(serializer.data)
+
+            logger.info('Tournament %s created successfully for user %s', tournament.name, user.username)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def list(self, request):
@@ -115,6 +119,12 @@ class TournamentUserViewSet(viewsets.ModelViewSet):
         tournament_user.save()
         send_tournament_user_notification(user, tournament_user, tournament_state)
 
+        logger.info(
+            'TournamentUser state updated to %s for user %s in tournament %s', 
+            TournamentUser.TOURNAMENT_USER_STATES[tournament_state][1], 
+            tournament_user.get_user_username(), 
+            tournament_user.get_tournament_name()
+        )
         serializer = self.get_serializer(tournament_user)
         return Response(serializer.data)
 

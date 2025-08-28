@@ -1,3 +1,4 @@
+import logging
 from rest_framework import status, permissions, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,7 +7,7 @@ from django.utils import timezone
 from .serializers import MatchResultSerializer
 from .models import MatchResult, Match
 
-
+logger = logging.getLogger(__name__)
 class MatchResultsListCreateApiView(generics.ListCreateAPIView):
     permission_class = (permissions.IsAuthenticated,)
     serializer_class = MatchResultSerializer
@@ -58,6 +59,7 @@ class MatchResultsUpdateApiView(APIView):
 
         MatchResult.objects.bulk_update(match_results, ['goals_team_1', 'goals_team_2'])
 
+        logger.info('User %s updated match results', request.user.username)
         return Response({'success': 'Match results updated successfully!'})
     
 

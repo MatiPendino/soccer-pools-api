@@ -44,3 +44,9 @@ class TournamentUser(BaseModel):
 
     def __str__(self):
         return f'{self.tournament.name} - {self.user.username}'
+    
+    def get_tournament_name(self):
+        return self.tournament.name
+    
+    def get_user_username(self):
+        return self.user.username

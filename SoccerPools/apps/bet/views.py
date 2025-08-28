@@ -1,3 +1,4 @@
+import logging
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -12,6 +13,8 @@ from .serializers import BetRoundSerializer
 from .models import BetRound, BetLeague
 from .utils import generate_response_data
 from .pagination import BetRoundLeadersCursorPagination
+
+logger = logging.getLogger(__name__)
 
 class BetRoundResultsLegacyApiView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -90,6 +93,7 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
         existing_user_bet_league = BetLeague.objects.filter(state=True, league=league, user=user)
         # If the user does not have enough coins and there is no existing BetLeague instance for this league and user, raise a ValidationError
         if (user.coins < league.coins_cost) and not existing_user_bet_league.exists():
+            logger.info('User %s has insufficient coins to join league %s', user.username, league.name)
             raise ValidationError({'coins': 'Your coins are insufficient for joining this league'})
         
         # If there is already a BetLeague instance for this league and user, set 
@@ -111,6 +115,7 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
                 bet_rounds=bet_rounds
             )
 
+            logger.info('User %s rejoined league %s', user.username, league.name)
             return Response(response_data, status=status.HTTP_200_OK)
 
 
@@ -147,6 +152,7 @@ class LeagueBetRoundsMatchResultsCreateApiView(APIView):
             bet_rounds=bet_rounds
         )
 
+        logger.info('User %s joined league %s', user.username, league.name)
         return Response(response_data, status=status.HTTP_201_CREATED)
     
     def get_serializer_context(self):
