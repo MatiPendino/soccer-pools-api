@@ -24,7 +24,7 @@ def check_upcoming_rounds():
 @shared_task
 def finalize_pending_rounds():
     """
-        Finalize all PENDING rounds where all its matches are FINALIZED or CANCELLED, 
+        Finalize all PENDING rounds where all its matches are not NOT_STARTED or PENDING, 
         and distribute Coin Rewards
     """
 
