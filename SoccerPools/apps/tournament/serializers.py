@@ -22,7 +22,7 @@ class TournamentSerializer(serializers.ModelSerializer):
     def get_is_current_user_admin(self, obj):
         """Check if the current user is the tournament admin"""
         request = self.context.get('request')
-        if request and request.user.is_authenticated:
+        if request and request.user.is_authenticated and obj.admin_tournament:
             return obj.admin_tournament.id == request.user.id
         return False
 
