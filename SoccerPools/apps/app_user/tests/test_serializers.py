@@ -1,7 +1,5 @@
 from django.test import TestCase
-from django.core.exceptions import ValidationError
-from apps.app_user.serializers import UserRegisterSerializer, UserLoginSerializer
-from apps.app_user.models import AppUser
+from apps.app_user.serializers import UserRegisterSerializer
 
 class UserRegisterSerializerTest(TestCase):
     
@@ -65,29 +63,3 @@ class UserRegisterSerializerTest(TestCase):
         }
         serializer = UserRegisterSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-
-
-class UserLoginSerializerTest(TestCase):
-
-    def test_existing_user(self):
-        data = {
-            'username': 'existing',
-            'email': 'exist@gmail.com',
-            'name': 'Existing',
-            'last_name': 'A', 
-            'password': '123456789'
-        }
-        app_user = AppUser.objects.create_user(**data)
-        serializer = UserLoginSerializer(
-            data={'username': data.get('username'), 'password': data.get('password')}
-        )
-        if serializer.is_valid():
-            self.assertEqual(app_user, serializer.check_user({'username': data.get('username'), 'password': data.get('password')}))
-        
-
-    def test_not_existing_user(self):
-        data = {'username': 'not_existing', 'password': '123456789'}
-        serializer = UserLoginSerializer(data=data)
-        if serializer.is_valid():
-            with self.assertRaises(ValidationError):
-                serializer.check_user(data)

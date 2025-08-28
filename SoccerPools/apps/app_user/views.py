@@ -1,58 +1,25 @@
 import requests
 from decouple import config
-from rest_framework.views import APIView
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.response import Response
 from rest_framework import permissions, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
-from django.core.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, NotFound
 from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import authenticate
 from django.shortcuts import render
 from utils import generate_unique_field_value
 from apps.bet.models import BetLeague
 from apps.league.serializers import LeagueSerializer
 from .models import AppUser
-from .serializers import (
-    UserLoginSerializer, UserRegisterSerializer, UserSerializer, AddCoinsSerializer, UserEditableSerializer
-)
+from .serializers import UserSerializer, AddCoinsSerializer, UserEditableSerializer
 from .services import grant_coins
-
-
-class UserRegister(APIView):
-    permission_classes = (permissions.AllowAny,)
-
-    def post(self, request):
-        serializer = UserRegisterSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.create(request.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-            
-
-class UserLogin(APIView):
-    permission_classes = (permissions.AllowAny,)
-    authentication_classes = (SessionAuthentication,)
-
-    def post(self, request):
-        data = request.data
-        serializer = UserLoginSerializer(data=data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.check_user(data)
-            login(request, user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        
-
-class UserLogout(APIView):
-    def post(self, request):
-        logout(request)
-        return Response(status=status.HTTP_200_OK)
-    
  
 class UserViewSet(ViewSet):
     permission_classes = (permissions.IsAuthenticated,)
@@ -85,10 +52,12 @@ class UserDestroyApiView(APIView):
     """
     def delete(self, request, *args, **kwargs):
         user = request.user
-        if user:
-            user.remove_user()
-            return Response({'success': 'User removed successfully'}, status=status.HTTP_204_NO_CONTENT)
-        raise AppUser.DoesNotExist 
+
+        if not user or not user.is_authenticated:
+            raise NotFound('User not found or not authenticated')
+
+        user.remove_user()
+        return Response({'success': 'User removed successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 
 class UserInLeague(APIView):
@@ -134,14 +103,14 @@ class GoogleLoginView(APIView):
     def post(self, request):
         access_token = request.data.get("accessToken")
         if not access_token:
-            raise ValidationError('Access token is required')
+            raise ValidationError({'access_token': 'Access token is required'})
 
         user_info_url = "https://www.googleapis.com/userinfo/v2/me"
         headers = {"Authorization": f"Bearer {access_token}"}
         user_info_response = requests.get(user_info_url, headers=headers)
 
         if user_info_response.status_code != status.HTTP_200_OK:
-            raise ValidationError('Failed to retrieve user info')
+            raise ValidationError({'User': 'Failed to retrieve user info'})
 
         user_info = user_info_response.json()
         email = user_info.get("email")

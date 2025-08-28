@@ -1,10 +1,10 @@
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q, F
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import ValidationError
 from apps.league.models import Round, League
 from apps.match.models import Match, MatchResult
 from apps.tournament.models import TournamentUser

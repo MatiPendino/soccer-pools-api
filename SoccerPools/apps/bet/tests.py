@@ -237,9 +237,9 @@ class LeagueBetsMatchResultsCreateTest(APITestCase):
             'league_slug': self.league.slug,
         }
 
-        with self.assertRaises(ValidationError):
-            response = self.client.post(self.url, data, format='json')
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.post(self.url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.user.coins, 0)
         self.assertEqual(BetLeague.objects.count(), 0)
 
     def test_no_enough_coins_existing_bet_league(self):

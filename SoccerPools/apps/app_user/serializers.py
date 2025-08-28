@@ -1,8 +1,7 @@
-from django.contrib.auth import get_user_model, authenticate
-from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from PIL import Image
+from django.contrib.auth import get_user_model
 from .models import CoinGrant
 from .validations import username_validator
 
@@ -71,17 +70,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user_obj.is_active = False
         user_obj.save()
         return user_obj
-    
-
-class UserLoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()
-
-    def check_user(self, clean_data):
-        user = authenticate(username=clean_data.get('username'), password=clean_data.get('password'))
-        if not user:
-            raise ValidationError('User not found.')
-        return user
     
 
 class UserSerializer(serializers.ModelSerializer):

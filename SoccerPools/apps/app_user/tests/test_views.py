@@ -1,9 +1,6 @@
-from django.test import TestCase
-from django.urls import reverse
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
+from django.contrib.auth import get_user_model
 from apps.app_user.models import CoinGrant
 from apps.app_user.factories import AppUserFactory
 from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
@@ -13,86 +10,6 @@ from apps.match.models import MatchResult
 from apps.bet.models import BetRound, BetLeague
 
 User = get_user_model()
-class UserRegisterViewTest(TestCase):
-    def setUp(self):
-        self.register_url = reverse('user_register')
-        self.client = APIClient()
-
-    def test_user_registration_success(self):
-        data = {
-            'username': 'mati',
-            'email': 'mati@gmail.com',
-            'name': 'Matias',
-            'last_name': 'Pendino',
-            'password': '123456789'
-        }
-        response = self.client.post(self.register_url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    def test_user_registration_failure(self):
-        data = {'username': 'fail'}
-        response = self.client.post(self.register_url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-class UserLoginViewTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        User.objects.create_user(
-            username='mati',
-            email='mati@gmail.com',
-            name='Matias',
-            last_name='Pendino',
-            password='123456789'
-        )
-
-    def setUp(self):
-        self.login_url = reverse('user_login')
-        self.client = APIClient()
-
-    def test_user_login_success(self):
-        data = {
-            'username': 'mati',
-            'password': '123456789'
-        }
-        response = self.client.post(self.login_url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_user_login_failure(self):
-        data = {
-            'username': 'mati',
-            'password': '12345678'
-        }
-        with self.assertRaises(ValidationError):
-            self.client.post(self.login_url, data, format='json')
-
-    def test_missing_login_data(self):
-        data_no_password = {'username': 'mati'}
-        response = self.client.post(self.login_url, data_no_password, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        data_no_username = {'password': '123456789'}
-        response = self.client.post(self.login_url, data_no_username, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-class UserLogoutViewTest(TestCase):
-    def setUp(self):
-        self.logout_url = reverse('user_logout')
-        self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='mati',
-            email='email@gmail.com',
-            name='Mati',
-            last_name='Pendino',
-            password='123456798'
-        )
-
-    def test_logout_authenticated_user(self):
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(self.logout_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
 
 class UserViewSetTest(APITestCase):
     def setUp(self):
