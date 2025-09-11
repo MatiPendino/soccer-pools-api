@@ -78,6 +78,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email', 'name', 'last_name', 'profile_image', 'coins')
 
 
+class UserCoinsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['coins']
+
+
 class AddCoinsSerializer(serializers.Serializer):
     reward_type = serializers.ChoiceField(
         choices=[CoinGrant.AD_REWARD, CoinGrant.APP_REVIEW], 

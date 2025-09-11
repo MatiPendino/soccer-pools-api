@@ -53,7 +53,7 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     balance = models.DecimalField(default=0, max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    coins = models.PositiveIntegerField(default=3000)
+    coins = models.PositiveIntegerField(default=5000)
     created_at = models.DateTimeField(default=timezone.now, null=True)
     instagram_username = models.CharField(max_length=255, blank=True, null=True)
     twitter_username = models.CharField(max_length=255, blank=True, null=True)

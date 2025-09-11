@@ -36,9 +36,9 @@ class League(BaseModel):
     COINS_THIRD_PRIZE_MULT = 50
 
     # Minimum Coin Prizes
-    MIN_COINS_FIRST_PRIZE = 10000
-    MIN_COINS_SECOND_PRIZE = 4000
-    MIN_COINS_THIRD_PRIZE = 2000
+    MIN_COINS_FIRST_PRIZE = 50000
+    MIN_COINS_SECOND_PRIZE = 20000
+    MIN_COINS_THIRD_PRIZE = 10000
 
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, null=True, blank=True)
@@ -92,9 +92,9 @@ class Round(BaseModel):
     COINS_THIRD_PRIZE_MULT = 10
 
     # Minimum Coin Prizes
-    MIN_COINS_FIRST_PRIZE = 1000
-    MIN_COINS_SECOND_PRIZE = 400
-    MIN_COINS_THIRD_PRIZE = 200
+    MIN_COINS_FIRST_PRIZE = 5000
+    MIN_COINS_SECOND_PRIZE = 2000
+    MIN_COINS_THIRD_PRIZE = 1000
 
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True, null=True)

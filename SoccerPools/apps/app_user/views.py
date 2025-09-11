@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
-from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, RetrieveAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import ValidationError, NotFound
 from django.core.files.base import ContentFile
@@ -19,7 +19,7 @@ from utils import generate_unique_field_value
 from apps.bet.models import BetLeague
 from apps.league.serializers import LeagueSerializer
 from .models import AppUser, CoinGrant
-from .serializers import UserSerializer, AddCoinsSerializer, UserEditableSerializer
+from .serializers import UserSerializer, AddCoinsSerializer, UserEditableSerializer, UserCoinsSerializer
 from .services import grant_coins
 
 logger = logging.getLogger(__name__)
@@ -107,6 +107,15 @@ class UserEditable(RetrieveUpdateAPIView):
         logger.info('Profile updated for user %s', user.username)
         return user
 
+class UserCoinsView(RetrieveAPIView):
+    serializer_class = UserCoinsSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return AppUser.objects.only('id', 'coins')
+
+    def get_object(self):
+        return self.request.user
 
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
