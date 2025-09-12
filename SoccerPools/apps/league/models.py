@@ -36,9 +36,9 @@ class League(BaseModel):
     COINS_THIRD_PRIZE_MULT = 50
 
     # Minimum Coin Prizes
-    MIN_COINS_FIRST_PRIZE = 50000
-    MIN_COINS_SECOND_PRIZE = 20000
-    MIN_COINS_THIRD_PRIZE = 10000
+    DEFAULT_MIN_COINS_FIRST = 50000
+    DEFAULT_MIN_COINS_SECOND = 20000
+    DEFAULT_MIN_COINS_THIRD = 10000
 
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, null=True, blank=True)
@@ -49,6 +49,9 @@ class League(BaseModel):
     coins_cost = models.PositiveIntegerField(default=1000)
     is_cup = models.BooleanField(help_text='If True, this league has a Cup format', default=False)
     league_state = models.PositiveSmallIntegerField('State of the league', default=0, choices=STATE_CODES)
+    minimum_coins_first_prize = models.PositiveIntegerField(default=DEFAULT_MIN_COINS_FIRST)
+    minimum_coins_second_prize = models.PositiveIntegerField(default=DEFAULT_MIN_COINS_SECOND)
+    minimum_coins_third_prize = models.PositiveIntegerField(default=DEFAULT_MIN_COINS_THIRD)
     
     @property
     def coins_prizes(self):
@@ -62,9 +65,9 @@ class League(BaseModel):
 
         # Return the prizes ensuring they are at least the minimum values
         return {
-            'coins_prize_first': max(prize_first_player_based, League.MIN_COINS_FIRST_PRIZE),
-            'coins_prize_second': max(prize_second_player_based, League.MIN_COINS_SECOND_PRIZE),
-            'coins_prize_third': max(prize_third_player_based, League.MIN_COINS_THIRD_PRIZE),
+            'coins_prize_first': max(prize_first_player_based, self.minimum_coins_first_prize),
+            'coins_prize_second': max(prize_second_player_based, self.minimum_coins_second_prize),
+            'coins_prize_third': max(prize_third_player_based, self.minimum_coins_third_prize),
         }
 
     def __str__(self):
@@ -92,9 +95,9 @@ class Round(BaseModel):
     COINS_THIRD_PRIZE_MULT = 10
 
     # Minimum Coin Prizes
-    MIN_COINS_FIRST_PRIZE = 5000
-    MIN_COINS_SECOND_PRIZE = 2000
-    MIN_COINS_THIRD_PRIZE = 1000
+    DEFAULT_MIN_COINS_FIRST = 5000
+    DEFAULT_MIN_COINS_SECOND = 2000
+    DEFAULT_MIN_COINS_THIRD = 1000
 
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True, null=True)
@@ -108,6 +111,9 @@ class Round(BaseModel):
     league = models.ForeignKey(League, related_name='rounds', on_delete=models.CASCADE)
     is_general_round = models.BooleanField(default=False)
     api_round_name = models.CharField(max_length=60, blank=True, null=True)
+    minimum_coins_first_prize = models.PositiveIntegerField(default=DEFAULT_MIN_COINS_FIRST)
+    minimum_coins_second_prize = models.PositiveIntegerField(default=DEFAULT_MIN_COINS_SECOND)
+    minimum_coins_third_prize = models.PositiveIntegerField(default=DEFAULT_MIN_COINS_THIRD)
 
     @property
     def coins_prizes(self):
@@ -126,14 +132,15 @@ class Round(BaseModel):
         )
 
         # Ensure the prizes are at least the minimum values, considering if it is a general round or not
+        league_min_first, league_min_second, league_min_third = self.get_league_minimum_prizes()
         if self.is_general_round:
-            coins_prize_first = max(prize_first_player_based, League.MIN_COINS_FIRST_PRIZE)
-            coins_prize_second = max(prize_second_player_based, League.MIN_COINS_SECOND_PRIZE)
-            coins_prize_third = max(prize_third_player_based, League.MIN_COINS_THIRD_PRIZE)
+            coins_prize_first = max(prize_first_player_based, league_min_first)
+            coins_prize_second = max(prize_second_player_based, league_min_second)
+            coins_prize_third = max(prize_third_player_based, league_min_third)
         else:
-            coins_prize_first = max(prize_first_player_based, Round.MIN_COINS_FIRST_PRIZE)
-            coins_prize_second = max(prize_second_player_based, Round.MIN_COINS_SECOND_PRIZE)
-            coins_prize_third = max(prize_third_player_based, Round.MIN_COINS_THIRD_PRIZE)
+            coins_prize_first = max(prize_first_player_based, self.minimum_coins_first_prize)
+            coins_prize_second = max(prize_second_player_based, self.minimum_coins_second_prize)
+            coins_prize_third = max(prize_third_player_based, self.minimum_coins_third_prize)
 
         return {
             'coins_prize_first': coins_prize_first,
@@ -166,6 +173,14 @@ class Round(BaseModel):
     def get_league_name(self):
         """Get the league name of the round"""
         return self.league.name if self.league else None
+    
+    def get_league_minimum_prizes(self):
+        """Return a list of the league minimum coin prizes"""
+        return [
+            self.league.minimum_coins_first_prize, 
+            self.league.minimum_coins_second_prize, 
+            self.league.minimum_coins_third_prize
+        ]
 
     def update_round_winners_prizes(self, competition_name):
         """
