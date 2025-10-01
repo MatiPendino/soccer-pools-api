@@ -1,8 +1,7 @@
 from django.db import models
-from django.db.models import F
 from utils import generate_unique_field_value
 from apps.base.models import BaseModel
-from .utils import get_coins_prize_player_based
+from .utils import get_coins_prizes
 
 
 class League(BaseModel):
@@ -119,28 +118,7 @@ class Round(BaseModel):
     def coins_prizes(self):
         """Calculate the coin prizes for the round"""
 
-        # Calculate the prizes based on the number of bet rounds and the multipliers
-        bet_rounds_count = self.bet_rounds.count()
-        prize_first_player_based = get_coins_prize_player_based(
-            bet_rounds_count, self.is_general_round, Round.COINS_FIRST_PRIZE_MULT, League.COINS_FIRST_PRIZE_MULT
-        )
-        prize_second_player_based = get_coins_prize_player_based(
-            bet_rounds_count, self.is_general_round, Round.COINS_SECOND_PRIZE_MULT, League.COINS_SECOND_PRIZE_MULT
-        )
-        prize_third_player_based = get_coins_prize_player_based(
-            bet_rounds_count, self.is_general_round, Round.COINS_THIRD_PRIZE_MULT, League.COINS_THIRD_PRIZE_MULT
-        )
-
-        # Ensure the prizes are at least the minimum values, considering if it is a general round or not
-        league_min_first, league_min_second, league_min_third = self.get_league_minimum_prizes()
-        if self.is_general_round:
-            coins_prize_first = max(prize_first_player_based, league_min_first)
-            coins_prize_second = max(prize_second_player_based, league_min_second)
-            coins_prize_third = max(prize_third_player_based, league_min_third)
-        else:
-            coins_prize_first = max(prize_first_player_based, self.minimum_coins_first_prize)
-            coins_prize_second = max(prize_second_player_based, self.minimum_coins_second_prize)
-            coins_prize_third = max(prize_third_player_based, self.minimum_coins_third_prize)
+        coins_prize_first, coins_prize_second, coins_prize_third = get_coins_prizes(self)
 
         return {
             'coins_prize_first': coins_prize_first,
@@ -181,61 +159,6 @@ class Round(BaseModel):
             self.league.minimum_coins_second_prize, 
             self.league.minimum_coins_third_prize
         ]
-
-    def update_round_winners_prizes(self, competition_name):
-        """
-            Update the winners of the round and distribute coins to the winners.
-        """
-        from apps.bet.models import BetRound
-        from apps.bet.services import update_top_three_bet_league_winners
-        from apps.notification.utils import send_push_winner
-
-        # Get the first three bet rounds of the round
-        first_bet_round, second_bet_round, third_bet_round = BetRound.objects.with_matches_points(
-            round_slug=self.slug
-        )[:3]
-
-        # Get the first three users of the bet rounds
-        first_user = first_bet_round.get_user()
-        second_user = second_bet_round.get_user()
-        third_user = third_bet_round.get_user()
-
-        # Update the winners of the bet rounds
-        first_bet_round.winner_first = True
-        second_bet_round.winner_second = True
-        third_bet_round.winner_third = True
-        first_bet_round.save()
-        second_bet_round.save()
-        third_bet_round.save()
-
-        # If the round is a league, update the winners of the bet leagues too
-        if self.is_general_round:
-            update_top_three_bet_league_winners(
-                league=self.league, first_user=first_user, second_user=second_user, third_user=third_user
-            )
-
-        # Distribute coins to the winners
-        n_bet_rounds = self.bet_rounds.count()
-        if self.is_general_round:
-            first_prize = n_bet_rounds * League.COINS_FIRST_PRIZE_MULT
-            second_prize = n_bet_rounds * League.COINS_SECOND_PRIZE_MULT
-            third_prize = n_bet_rounds * League.COINS_THIRD_PRIZE_MULT
-        else:
-            first_prize = n_bet_rounds * Round.COINS_FIRST_PRIZE_MULT
-            second_prize = n_bet_rounds * Round.COINS_SECOND_PRIZE_MULT
-            third_prize = n_bet_rounds * Round.COINS_THIRD_PRIZE_MULT
-
-        first_user.coins = F('coins') + first_prize
-        second_user.coins = F('coins') + second_prize
-        third_user.coins = F('coins') + third_prize
-        first_user.save()
-        second_user.save()
-        third_user.save()
-
-        # Send push notifications to the winners
-        send_push_winner(first_user, competition_name, first_prize)
-        send_push_winner(second_user, competition_name, second_prize)
-        send_push_winner(third_user, competition_name, third_prize)
 
 
 class Team(BaseModel):

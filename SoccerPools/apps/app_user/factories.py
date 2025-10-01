@@ -10,4 +10,4 @@ class AppUserFactory(factory.django.DjangoModelFactory):
     name = factory.Faker('word')
     last_name = factory.Faker('word')
     coins = 3000
-    
+    referred_by = None

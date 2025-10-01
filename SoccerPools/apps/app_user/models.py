@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.conf import settings
 from apps.base.models import BaseModel
 from .validations import validate_no_spaces
+from .utils import generate_referral_code
 
 class AppUserManager(BaseUserManager):
     def _create_user(
@@ -57,6 +58,12 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(default=timezone.now, null=True)
     instagram_username = models.CharField(max_length=255, blank=True, null=True)
     twitter_username = models.CharField(max_length=255, blank=True, null=True)
+    referral_code = models.CharField(
+        max_length=12, unique=True, blank=True, null=True, default=generate_referral_code
+    )
+    referred_by = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, blank=True, null=True, related_name='referrals'
+    )
     
     objects = AppUserManager()
     USERNAME_FIELD = 'username'
@@ -89,18 +96,23 @@ class CoinGrant(BaseModel):
     AD_REWARD_DAILY_CAP = 10
     AD_REWARD_AMOUNT = 10 if settings.DEBUG else 1000
     APP_REVIEW_AMOUNT = 2000
+    REFERRAL_SIGNUP_AMOUNT = 5000
+    REFERRER_EARNINGS_MULTIPLIER = 0.1
 
     AD_REWARD = 0
     APP_REVIEW = 1
     DAILY = 2
-    REFERRAL = 3
+    REFERRAL_SIGNUP = 3
     LEAGUE_WINNER = 4
+    REFERRAL_EARNED = 5
+
     REWARD_TYPES = [
         (AD_REWARD, 'Ad reward'), 
         (APP_REVIEW, 'App review'),
         (DAILY, 'Daily'), 
-        (REFERRAL, 'Referral'),
+        (REFERRAL_SIGNUP, 'Referral Signup'),
         (LEAGUE_WINNER, 'League winner'),
+        (REFERRAL_EARNED, 'Referral Earned'),
     ]
 
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE, related_name='coin_grants')

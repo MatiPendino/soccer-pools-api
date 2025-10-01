@@ -7,7 +7,7 @@ from apps.match.factories import MatchFactory, MatchResultFactory
 from apps.bet.factories import BetRoundFactory, BetLeagueFactory
 from apps.league.models import Round, League
 from apps.match.models import Match
-from apps.bet.models import BetRound
+from apps.app_user.models import CoinGrant
 from apps.league.tasks import check_upcoming_rounds, finalize_pending_rounds, check_finalized_leagues
 
 
@@ -85,8 +85,8 @@ class FinalizePendingRoundsTest(TestCase):
         self.coins = 3000
         self.user_1 = AppUserFactory(coins=self.coins)
         self.user_2 = AppUserFactory(coins=self.coins)
-        self.user_3 = AppUserFactory(coins=self.coins)
         self.user_4 = AppUserFactory(coins=self.coins)
+        self.user_3 = AppUserFactory(referred_by=self.user_4, coins=self.coins)
         self.bet_league_1 = BetLeagueFactory(user=self.user_1, league=self.league)
         self.bet_round_1 = BetRoundFactory(bet_league=self.bet_league_1, round=self.round_2)
         self.bet_league_2 = BetLeagueFactory(user=self.user_2, league=self.league)
@@ -134,13 +134,16 @@ class FinalizePendingRoundsTest(TestCase):
         self.assertFalse(self.bet_round_4.winner_second)
         self.assertFalse(self.bet_round_4.winner_third)
 
-        total_coins_user_1 = self.coins + BetRound.objects.count() * Round.COINS_FIRST_PRIZE_MULT
-        total_coins_user_2 = self.coins + BetRound.objects.count() * Round.COINS_SECOND_PRIZE_MULT
-        total_coins_user_3 = self.coins + BetRound.objects.count() * Round.COINS_THIRD_PRIZE_MULT
+        total_coins_user_1 = self.coins + Round.DEFAULT_MIN_COINS_FIRST
+        total_coins_user_2 = self.coins + Round.DEFAULT_MIN_COINS_SECOND
+        total_coins_user_3 = self.coins + Round.DEFAULT_MIN_COINS_THIRD
+        total_coins_user_4 = (
+            self.coins + Round.DEFAULT_MIN_COINS_THIRD*CoinGrant.REFERRER_EARNINGS_MULTIPLIER
+        )
         self.assertEqual(self.user_1.coins, total_coins_user_1)
         self.assertEqual(self.user_2.coins, total_coins_user_2)
         self.assertEqual(self.user_3.coins, total_coins_user_3)
-        self.assertEqual(self.user_4.coins, self.coins)
+        self.assertEqual(self.user_4.coins, total_coins_user_4)
 
 
 class CheckFinalizedLeaguesTest(TestCase):
@@ -207,9 +210,9 @@ class CheckFinalizedLeaguesTest(TestCase):
         self.bet_league_user_2.refresh_from_db()
         self.bet_league_user_3.refresh_from_db()
 
-        total_coins_user_1 = self.coins + BetRound.objects.count() * League.COINS_FIRST_PRIZE_MULT
-        total_coins_user_2 = self.coins + BetRound.objects.count() * League.COINS_SECOND_PRIZE_MULT
-        total_coins_user_3 = self.coins + BetRound.objects.count() * League.COINS_THIRD_PRIZE_MULT
+        total_coins_user_1 = self.coins + self.league.minimum_coins_first_prize
+        total_coins_user_2 = self.coins + self.league.minimum_coins_second_prize
+        total_coins_user_3 = self.coins + self.league.minimum_coins_third_prize
         self.assertEqual(self.user_1.coins, total_coins_user_1)
         self.assertEqual(self.user_2.coins, total_coins_user_2)
         self.assertEqual(self.user_3.coins, total_coins_user_3)

@@ -4,6 +4,7 @@ from PIL import Image
 from django.contrib.auth import get_user_model
 from .models import CoinGrant
 from .validations import username_validator
+from .services import referral_signup
 
 User = get_user_model()
 class UserEditableSerializer(serializers.ModelSerializer):
@@ -54,9 +55,10 @@ class UserEditableSerializer(serializers.ModelSerializer):
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
+    referral_code = serializers.CharField(required=False, allow_blank=True)
     class Meta:
         model = User
-        fields = ('username', 'email', 'name', 'last_name', 'password')
+        fields = ('username', 'email', 'name', 'last_name', 'password', 'referral_code')
 
     def create(self, clean_data):
         user_obj = User.objects.create_user(
@@ -66,16 +68,27 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             name=clean_data['name'],
             last_name=clean_data['last_name']
         )
+
+        try:
+            referral_code = clean_data.get('referral_code')
+            if referral_code:
+                referral_signup(user_obj, referral_code)
+        except User.DoesNotExist:
+            pass
+
         # User will be inactive until registration confirmed via email
         user_obj.is_active = False
-        user_obj.save()
+        user_obj.save(update_fields=['is_active'])
         return user_obj
     
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'name', 'last_name', 'profile_image', 'coins')
+        fields = (
+            'id', 'username', 'email', 'name', 'last_name', 'profile_image', 'coins',
+            'referral_code',
+        )
 
 
 class UserCoinsSerializer(serializers.ModelSerializer):
@@ -83,6 +96,12 @@ class UserCoinsSerializer(serializers.ModelSerializer):
         model = User
         fields = ['coins']
 
+
+class UserMemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'profile_image', 'created_at')
+        
 
 class AddCoinsSerializer(serializers.Serializer):
     reward_type = serializers.ChoiceField(

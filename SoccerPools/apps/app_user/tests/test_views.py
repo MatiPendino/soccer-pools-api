@@ -82,6 +82,20 @@ class UserViewSetTest(APITestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.coins, 3000)
 
+    def test_members(self):
+        member_url = f'{self.url}members/'
+        user_1 = AppUserFactory()
+        user_2 = AppUserFactory(username='user_2', referred_by=self.user)
+        user_3 = AppUserFactory(username='user_3', referred_by=self.user)
+        user_4 = AppUserFactory(referred_by=user_1)
+        user_5 = AppUserFactory()
+
+        response = self.client.get(member_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0].get('username'), user_2.username)
+        self.assertEqual(response.data[1].get('username'), user_3.username)
+
 
 class UserInLeagueTest(APITestCase):
     def setUp(self):

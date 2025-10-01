@@ -11,7 +11,6 @@ from rest_framework.decorators import action
 from rest_framework.generics import RetrieveUpdateAPIView, RetrieveAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import ValidationError, NotFound
-from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from django.shortcuts import render
@@ -19,8 +18,11 @@ from utils import generate_unique_field_value
 from apps.bet.models import BetLeague
 from apps.league.serializers import LeagueSerializer
 from .models import AppUser, CoinGrant
-from .serializers import UserSerializer, AddCoinsSerializer, UserEditableSerializer, UserCoinsSerializer
-from .services import grant_coins
+from .serializers import (
+    UserSerializer, AddCoinsSerializer, UserEditableSerializer, UserCoinsSerializer,
+    UserMemberSerializer
+)
+from .services import grant_coins, add_google_picture_app_user, referral_signup
 
 logger = logging.getLogger(__name__)
  
@@ -49,6 +51,13 @@ class UserViewSet(ViewSet):
         )
 
         return Response({'coins': new_balance}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], url_path='members')
+    def members(self, request):
+        user = request.user
+        members = AppUser.objects.filter(referred_by=user)
+
+        return Response(UserMemberSerializer(members, many=True).data, status=status.HTTP_200_OK)
     
 
 class UserDestroyApiView(APIView):
@@ -122,6 +131,8 @@ class GoogleLoginView(APIView):
 
     def post(self, request):
         access_token = request.data.get("accessToken")
+        referral_code = request.data.get('referralCode')
+
         if not access_token:
             raise ValidationError({'access_token': 'Access token is required'})
 
@@ -149,15 +160,16 @@ class GoogleLoginView(APIView):
             }
         )
 
-        if created or not user.profile_image:
-            logger.info('Creating new user or updating profile image for user %s', user.id)
-            response = requests.get(profile_pic)
-            if response.status_code == status.HTTP_200_OK:
-                image_file = ContentFile(response.content)
-                user.profile_image.save(f"{user.username}_profile.jpg", image_file)
-                user.save()
+        if created:
+            logger.info('Creating new user %s', user.username)
+            add_google_picture_app_user(user, profile_pic)
+            if referral_code:
+                referral_signup(user, referral_code)
+        elif not user.profile_image:
+            logger.info('Updating profile image for existing user %s', user.username)
+            add_google_picture_app_user(user, profile_pic)
         else:
-            logger.info('Existing user logged in: %s', user.id)
+            logger.info('Existing user logged in: %s', user.username)
 
         refresh = RefreshToken.for_user(user)
         tokens = {
