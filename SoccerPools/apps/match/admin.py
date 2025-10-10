@@ -8,8 +8,8 @@ class MatchResources(resources.ModelResource):
         model = Match
 
 class MatchAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    search_fields = ('id', 'team_1__name', 'team_2__name', 'round__name', 'round__league__name')
-    list_display = ('id', 'get_round_name', 'get_team_1', 'get_team_2', 'get_league_name')
+    search_fields = ('id', 'team_1__name', 'team_2__name', 'round__name', 'round__league__name', 'api_match_id')
+    list_display = ('id', 'get_round_name', 'get_team_1', 'get_team_2', 'get_league_name', 'api_match_id')
     resource_class = MatchResources
 
 

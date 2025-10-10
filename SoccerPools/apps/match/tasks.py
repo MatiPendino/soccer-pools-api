@@ -2,6 +2,7 @@ from celery import shared_task
 from decouple import config
 from sentry_sdk import capture_message
 from dateutil import parser
+import logging
 import requests
 import json
 from django.db import transaction
@@ -13,6 +14,8 @@ from apps.notification.utils import send_push_nots_match
 from apps.league.models import Round
 from apps.match.models import Match, MatchResult
 from apps.match.utils import get_match_result_points
+
+logger = logging.getLogger(__name__)
 
 @shared_task
 def check_upcoming_matches():
@@ -130,14 +133,17 @@ def update_matches_start_date():
         response = requests.get(url, headers=headers)
         response_obj = json.loads(response.text)
 
-        match_response = response_obj.get('response')[0]
-        fixture_data = match_response.get('fixture')
-        start_date = parser.parse(fixture_data.get('date'))
-        match_start_date = localtime(match.start_date)
-        
-        if start_date != match_start_date:
-            match.start_date = start_date
-            match.save()
+        try:
+            match_response = response_obj.get('response')[0]
+            fixture_data = match_response.get('fixture')
+            start_date = parser.parse(fixture_data.get('date'))
+            match_start_date = localtime(match.start_date)
+            
+            if start_date != match_start_date:
+                match.start_date = start_date
+                match.save()
+        except Exception as err:
+            logger.error('Error while updating %s match: %s', match.api_match_id, err)
 
     rounds = Round.objects.filter(matches__in=matches).distinct()
     for round in rounds:
