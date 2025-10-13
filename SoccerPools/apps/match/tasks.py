@@ -58,7 +58,10 @@ def finalize_matches():
             try:
                 match_response = response_obj.get('response')[0]
             except IndexError:
-                capture_message(f'Error getting match {match} for api_match_id {match.api_match_id}', level="error")
+                capture_message(
+                    f'Error getting match {match} for api_match_id {match.api_match_id}, {response.status_code}: {response_obj}', 
+                    level="error"
+                )
                 continue
             goals_home = match_response.get('goals').get('home')
             goals_away = match_response.get('goals').get('away')
