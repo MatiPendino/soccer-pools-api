@@ -137,13 +137,16 @@ def update_matches_start_date():
             match_response = response_obj.get('response')[0]
             fixture_data = match_response.get('fixture')
             start_date = parser.parse(fixture_data.get('date'))
-            match_start_date = localtime(match.start_date)
+            match_start_date = localtime(match.start_date) if match.start_date else None
             
             if start_date != match_start_date:
                 match.start_date = start_date
                 match.save()
         except Exception as err:
-            logger.error('Error while updating %s match: %s', match.api_match_id, err)
+            logger.error(
+                'Error (%s) while updating %s, %s match: %s ... %s %s', 
+                url, match, match.api_match_id, err, response.status_code, response_obj
+            )
 
     rounds = Round.objects.filter(matches__in=matches).distinct()
     for round in rounds:
