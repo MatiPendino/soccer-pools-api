@@ -2,6 +2,7 @@ from celery import shared_task
 from decouple import config
 from sentry_sdk import capture_message
 from dateutil import parser
+from time import sleep
 import logging
 import requests
 import json
@@ -128,7 +129,7 @@ def update_matches_start_date():
     )
 
     base_url = f'https://v3.football.api-sports.io/fixtures?timezone={TIMEZONE}'
-    for match in matches:
+    for i, match in enumerate(matches, start=1):
         url = f'{base_url}&id={match.api_match_id}'
         headers = {
             'x-apisports-key': config('API_FOOTBALL_KEY')
@@ -150,6 +151,11 @@ def update_matches_start_date():
                 'Error (%s) while updating %s, %s match: %s ... %s %s', 
                 url, match, match.api_match_id, err, response.status_code, response_obj
             )
+        finally:
+            # Max requests per minute = 300
+            if i%300 == 0:
+                logger.info('Reached %s requests, sleeping 60 seconds to respect rate limit', i)
+                sleep(60) 
 
     rounds = Round.objects.filter(matches__in=matches).distinct()
     for round in rounds:
