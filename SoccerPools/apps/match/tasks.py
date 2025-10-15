@@ -129,7 +129,7 @@ def update_matches_start_date():
     )
 
     base_url = f'https://v3.football.api-sports.io/fixtures?timezone={TIMEZONE}'
-    for i, match in enumerate(matches, start=1):
+    for match in matches:
         url = f'{base_url}&id={match.api_match_id}'
         headers = {
             'x-apisports-key': config('API_FOOTBALL_KEY')
@@ -139,23 +139,25 @@ def update_matches_start_date():
 
         try:
             match_response = response_obj.get('response')[0]
-            fixture_data = match_response.get('fixture')
-            start_date = parser.parse(fixture_data.get('date'))
-            match_start_date = localtime(match.start_date) if match.start_date else None
-            
-            if start_date != match_start_date:
-                match.start_date = start_date
-                match.save()
         except Exception as err:
-            logger.error(
-                'Error (%s) while updating %s, %s match: %s ... %s %s', 
-                url, match, match.api_match_id, err, response.status_code, response_obj
-            )
-        finally:
-            # Max requests per minute = 300
-            if i%300 == 0:
+            errors = response_obj.get('errors')
+            if errors.get('rateLimit'):
                 logger.info('Reached %s requests, sleeping 60 seconds to respect rate limit', i)
-                sleep(60) 
+                sleep(60)
+            else:
+                logger.error(
+                    'Error (%s) while updating %s, %s match: %s ... %s %s', 
+                    url, match, match.api_match_id, err, response.status_code, response_obj
+                )
+            continue
+
+        fixture_data = match_response.get('fixture')
+        start_date = parser.parse(fixture_data.get('date'))
+        match_start_date = localtime(match.start_date) if match.start_date else None
+        
+        if start_date != match_start_date:
+            match.start_date = start_date
+            match.save()
 
     rounds = Round.objects.filter(matches__in=matches).distinct()
     for round in rounds:
