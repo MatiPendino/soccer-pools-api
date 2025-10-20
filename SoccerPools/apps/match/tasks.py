@@ -142,7 +142,7 @@ def update_matches_start_date():
         except Exception as err:
             errors = response_obj.get('errors')
             if errors.get('rateLimit'):
-                logger.info('Reached %s requests, sleeping 60 seconds to respect rate limit', i)
+                logger.info('Reached 300 requests, sleeping 60 seconds to respect rate limit')
                 sleep(60)
             else:
                 logger.error(
