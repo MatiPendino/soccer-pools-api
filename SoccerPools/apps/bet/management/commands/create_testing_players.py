@@ -13,6 +13,11 @@ from apps.app_user.models import AppUser
 from apps.league.models import League, Round
 from apps.bet.models import BetRound, BetLeague
 
+GOOGLEY_BG_HEX = [
+    "F44336", "E91E63", "9C27B0", "673AB7", "3F51B5", "2196F3",
+    "03A9F4", "00BCD4", "009688", "4CAF50", "8BC34A", "CDDC39",
+    "FFEB3B", "FFC107", "FF9800", "FF5722", "795548", "607D8B", "9E9E9E",
+]
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('league_name', type=str)
@@ -36,7 +41,7 @@ class Command(BaseCommand):
                 'last_name': last_name,
             })
 
-        base_url = 'https://avatar.iran.liara.run/username?color=ffffff&username='
+        base_url = 'https://avatar.iran.liara.run/username?color=eeeeee&username='
         for player_data in players_data:
             ####### User and Profile Image creation ########
             email = player_data['email']
@@ -58,7 +63,7 @@ class Command(BaseCommand):
                 user.save()
 
             try:
-                url = f"{base_url}{name[0]}"
+                url = f"{base_url}{name[0]}&background={random.choice(GOOGLEY_BG_HEX)}"
                 resp = requests.get(url, timeout=30)
                 resp.raise_for_status()
 
