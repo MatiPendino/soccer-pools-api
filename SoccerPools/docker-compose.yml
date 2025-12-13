@@ -20,9 +20,9 @@ services:
         max-file: "5"
 
   db:
-    image: postgres:13
+    image: postgres:14
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_14:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -76,4 +76,4 @@ services:
         max-file: "5"
 
 volumes:
-  postgres_data:
+  postgres_data_14:
