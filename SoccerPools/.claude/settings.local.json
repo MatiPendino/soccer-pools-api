@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"C:\\\\Users\\\\Matias\\\\Desktop\\\\Apps\\\\soccer-pools-api\\\\SoccerPools\" log --oneline -20)",
+      "Bash(python:*)",
+      "Bash(docker-compose exec:*)",
+      "Bash(find:*)"
+    ]
+  }
+}

@@ -36,6 +36,7 @@ LOCAL_APPS = [
     'apps.notification',
     'apps.tournament',
     'apps.prize',
+    'apps.payment',
 ]
 
 THIRD_APPS = [
@@ -51,12 +52,14 @@ THIRD_APPS = [
     'django_celery_beat',
     'storages',
     'anymail',
+    # 'silk',
 ]
 
 INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_APPS 
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    # 'silk.middleware.SilkyMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
@@ -228,6 +231,14 @@ STORAGES = {
 }
 AWS_DEFAULT_ACL = None
 
+# Cache settings
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://redis:6379/1',
+    }
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -264,3 +275,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# MercadoPago Settings
+MERCADOPAGO_ACCESS_TOKEN = config('MERCADOPAGO_ACCESS_TOKEN', default='')
+MERCADOPAGO_PUBLIC_KEY = config('MERCADOPAGO_PUBLIC_KEY', default='')
+
+# Payment callback URLs (deep links for mobile app)
+PAYMENT_SUCCESS_URL = config('PAYMENT_SUCCESS_URL', default='https://mercadopago.com')
+PAYMENT_FAILURE_URL = config('PAYMENT_FAILURE_URL', default='https://mercadopago.com')
+PAYMENT_PENDING_URL = config('PAYMENT_PENDING_URL', default='https://mercadopago.com')
+PAYMENT_WEBHOOK_URL = config('PAYMENT_WEBHOOK_URL', default='')
+MERCADOPAGO_WEBHOOK_SECRET = config('MERCADOPAGO_WEBHOOK_SECRET', default='')

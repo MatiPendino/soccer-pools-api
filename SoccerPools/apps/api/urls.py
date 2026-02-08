@@ -8,4 +8,5 @@ urlpatterns = [
     path('notifications/', include('apps.notification.urls')),
     path('tournaments/', include('apps.tournament.urls')),
     path('prizes/', include('apps.prize.urls')),
+    path('payments/', include('apps.payment.urls')),
 ]

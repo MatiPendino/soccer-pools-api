@@ -69,6 +69,14 @@ class League(BaseModel):
             'coins_prize_third': max(prize_third_player_based, self.minimum_coins_third_prize),
         }
 
+    @property
+    def has_paid_mode(self):
+        """Check if this league has paid mode enabled"""
+        try:
+            return self.paid_config.is_paid_mode_enabled
+        except Exception:
+            return False
+
     def __str__(self):
         return self.name
     
