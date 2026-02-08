@@ -6,6 +6,7 @@ from django.db.models import Q, Count, F
 from django.core.mail import mail_admins
 from apps.match.models import Match
 from apps.notification.utils import send_push_finalized_league, send_push_finalized_round
+from apps.payment.tasks import finalize_paid_round_prizes
 from .models import Round, League
 from .services import update_round_winners_prizes
 
@@ -49,6 +50,10 @@ def finalize_pending_rounds():
             logger.info('Finalized round %s in league %s', pending_round.name, pending_round.get_league_name())
             
         pending_rounds.update(round_state=Round.FINALIZED_ROUND)
+
+    # Trigger paid round prize distribution for each finalized round
+    for pending_round in pending_rounds:
+        finalize_paid_round_prizes.delay(pending_round.id)
 
 
 @shared_task

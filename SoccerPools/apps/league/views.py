@@ -20,10 +20,6 @@ class LeagueListApiView(generics.ListAPIView):
             leagues = leagues.filter(continent=continent)
 
         return leagues
-
-    def get_serializer_context(self):
-        """Pass request context so we can access the user in the serializer."""
-        return {'request': self.request}
     
 
 class LeagueRetrieveApiView(generics.RetrieveAPIView):
