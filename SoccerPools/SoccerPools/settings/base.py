@@ -101,7 +101,7 @@ REST_FRAMEWORK = {
 }
 
 # Email backend
-EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+EMAIL_BACKEND = "anymail.backends.amazon_ses.EmailBackend"
 DEFAULT_FROM_EMAIL = config('FROM_EMAIL')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
@@ -111,7 +111,11 @@ ADMINS = [
 ]
 
 ANYMAIL = {
-    "SENDGRID_API_KEY": config('SENDGRID_KEY'),
+    "AMAZON_SES_CLIENT_PARAMS": {
+        "aws_access_key_id": config('AWS_ACCESS_KEY_ID'),
+        "aws_secret_access_key": config('AWS_SECRET_ACCESS_KEY'),
+        "region_name": config('AWS_SES_REGION_NAME'),
+    },
 }
 
 SIMPLE_JWT = {
