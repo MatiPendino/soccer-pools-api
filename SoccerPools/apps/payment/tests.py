@@ -236,10 +236,10 @@ class PrizeDistributionTest(TestCase):
         winners = PaidWinner.objects.filter(prize_pool=self.prize_pool).order_by('position')
         self.assertEqual(winners.count(), 3)
 
-        # Check prize amounts (60/25/15 split of 1000)
-        self.assertEqual(winners[0].prize_amount_ars, Decimal('600.00'))
-        self.assertEqual(winners[1].prize_amount_ars, Decimal('250.00'))
-        self.assertEqual(winners[2].prize_amount_ars, Decimal('150.00'))
+        # Check prize amounts (70/20/10 split of 1000)
+        self.assertEqual(winners[0].prize_amount_ars, Decimal('700.00'))
+        self.assertEqual(winners[1].prize_amount_ars, Decimal('200.00'))
+        self.assertEqual(winners[2].prize_amount_ars, Decimal('100.00'))
 
         # Check winner flags on paid bet rounds
         self.paid_bet_rounds[0].refresh_from_db()

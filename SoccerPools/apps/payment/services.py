@@ -15,9 +15,9 @@ from .mercadopago_service import get_mercadopago_service
 logger = logging.getLogger(__name__)
 
 # Prize distribution percentages
-FIRST_PLACE_PERCENTAGE = Decimal('0.60')
-SECOND_PLACE_PERCENTAGE = Decimal('0.25')
-THIRD_PLACE_PERCENTAGE = Decimal('0.15')
+FIRST_PLACE_PERCENTAGE = Decimal('0.70')
+SECOND_PLACE_PERCENTAGE = Decimal('0.20')
+THIRD_PLACE_PERCENTAGE = Decimal('0.10')
 
 def calculate_payment_amounts(gross_amount, fee_percentage):
     """Calculate platform fee and prize pool contribution"""
