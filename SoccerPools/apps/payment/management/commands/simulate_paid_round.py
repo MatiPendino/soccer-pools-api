@@ -48,7 +48,7 @@ class Command(BaseCommand):
 
         # Validate user exists
         try:
-            user = AppUser.objects.get(username=username, state=True)
+            user = AppUser.objects.get(username=username)
             self.stdout.write(f'User found: {user.username} ({user.email})')
         except AppUser.DoesNotExist:
             raise CommandError(f'User with username "{username}" does not exist')
