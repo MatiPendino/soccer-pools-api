@@ -11,6 +11,7 @@ urlpatterns = [
     path('user_league/', LeagueUser.as_view(), name='league_users'),
     path('user_editable/', UserEditable.as_view(), name='user_editable'),
     path('user_coins/', UserCoinsView.as_view(), name='user_coins'),
+    path('avatars/', AvatarListView.as_view(), name='avatars'),
     path('android_google_oauth2/', GoogleLoginView.as_view(), name='android-google-oauth2'),
     path('remove_user/', remove_user, name='remove_user'),
     path('activate/<uid>/<token>/', activate_user, name='activate-user'),

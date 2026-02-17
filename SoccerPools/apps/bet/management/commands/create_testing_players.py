@@ -4,12 +4,12 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
-from django.core.management.base import BaseCommand 
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.core.files.base import ContentFile
 from django.db.models import Q
 from apps.match.models import Match, MatchResult
-from apps.app_user.models import AppUser
+from apps.app_user.models import AppUser, Avatar
 from apps.league.models import League, Round
 from apps.bet.models import BetRound, BetLeague
 
@@ -66,11 +66,24 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('league_name', type=str)
         parser.add_argument('num_players', type=int, default=2)
+        parser.add_argument('--num_avatars', type=int, default=0)
     
     def handle(self, *args, **options):
         num_players = options.get('num_players', 2)
+        num_avatars = options.get('num_avatars', 0)
         league_name = options.get('league_name')
+
+        if num_avatars > num_players:
+            raise CommandError('--num_avatars cannot exceed num_players')
+
         league = get_object_or_404(League, name=league_name)
+
+        avatars = list(Avatar.objects.filter(state=True))
+        if num_avatars > 0 and not avatars:
+            self.stdout.write(self.style.WARNING(
+                'No Avatar records found. All players will use generated avatars'
+            ))
+            num_avatars = 0
 
         fake = Faker('es_AR')
         players_data = []
@@ -84,6 +97,10 @@ class Command(BaseCommand):
                 'name': first_name,
                 'last_name': last_name,
             })
+
+        random.shuffle(players_data)
+        for i, player in enumerate(players_data):
+            player['use_avatar'] = i < num_avatars
 
         for player_data in players_data:
             # User and Profile Image creation
@@ -105,23 +122,31 @@ class Command(BaseCommand):
                 user.set_password(password)
                 user.save()
 
-            try:
-                # Generate Google-style avatar with first letter
-                bg_color = random.choice(GOOGLEY_BG_HEX)
-                avatar_image = generate_google_avatar(name[0], bg_color)
-
-                # Save to the ImageField
-                filename = f"avatars/{username}.png"
-                user.profile_image.save(filename, ContentFile(avatar_image.read()), save=True)
-
+            if player_data['use_avatar']:
+                avatar = random.choice(avatars)
+                user.profile_image = avatar.image
+                user.save()
                 self.stdout.write(self.style.SUCCESS(
-                    f"Generated avatar for {username} with letter '{name[0].upper()}' on #{bg_color}"
+                    f"Assigned predefined avatar '{avatar}' to {username}"
                 ))
+            else:
+                try:
+                    # Generate Google-style avatar with first letter
+                    bg_color = random.choice(GOOGLEY_BG_HEX)
+                    avatar_image = generate_google_avatar(name[0], bg_color)
 
-            except Exception as e:
-                self.stdout.write(self.style.ERROR(
-                    f"Failed to generate avatar for {username}: {e}"
-                ))
+                    # Save to the ImageField
+                    filename = f"avatars/{username}.png"
+                    user.profile_image.save(filename, ContentFile(avatar_image.read()), save=True)
+
+                    self.stdout.write(self.style.SUCCESS(
+                        f"Generated avatar for {username} with letter '{name[0].upper()}' on #{bg_color}"
+                    ))
+
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(
+                        f"Failed to generate avatar for {username}: {e}"
+                    ))
 
 
             # BetLeague, BetRound and MatchResult creation

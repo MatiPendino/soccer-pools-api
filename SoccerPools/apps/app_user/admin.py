@@ -1,14 +1,16 @@
 from django.contrib import admin
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
-from .models import AppUser, CoinGrant
+from .models import AppUser, CoinGrant, Avatar
 
 class AppUserResources(resources.ModelResource):
     class Meta:
         model = AppUser
 
 class AppUserAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    search_fields = ('username', 'name', 'last_name', 'email', 'instagram_username', 'twitter_username')
+    search_fields = (
+        'username', 'name', 'last_name', 'email', 'instagram_username', 'twitter_username'
+    )
     list_display = ('username', 'email', 'name', 'last_name', 'coins')
     resource_class = AppUserResources
 
@@ -22,5 +24,16 @@ class CoinGrantAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = ('user', 'reward_type', 'amount', 'creation_date')
     resource_class = CoinGrantResources
 
+
+class AvatarResources(resources.ModelResource):
+    class Meta:
+        model = Avatar
+
+class AvatarAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = ['id', 'name', 'state']
+    resource_class = AvatarResources
+
+
 admin.site.register(AppUser, AppUserAdmin)
 admin.site.register(CoinGrant, CoinGrantAdmin)
+admin.site.register(Avatar, AvatarAdmin)

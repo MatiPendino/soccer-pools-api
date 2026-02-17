@@ -2,11 +2,18 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from PIL import Image
 from django.contrib.auth import get_user_model
-from .models import CoinGrant
+from .models import CoinGrant, Avatar
 from .validations import username_validator
 from .services import referral_signup
 
 User = get_user_model()
+
+class AvatarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Avatar
+        fields = ('id', 'image')
+
+
 class UserEditableSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         required=True,
@@ -16,11 +23,16 @@ class UserEditableSerializer(serializers.ModelSerializer):
         ]
     )
     profile_image = serializers.ImageField(required=False, allow_null=True)
+    avatar_id = serializers.PrimaryKeyRelatedField(
+        queryset=Avatar.objects.filter(state=True), 
+        write_only=True, required=False, allow_null=True,
+    )
 
     class Meta:
         model = User
         fields = (
-            'username', 'email', 'name', 'last_name', 'profile_image', 'instagram_username', 'twitter_username'
+            'username', 'email', 'name', 'last_name', 'profile_image', 'instagram_username', 
+            'twitter_username', 'avatar_id',
         )
 
     def validate_username(self, value):
@@ -39,11 +51,11 @@ class UserEditableSerializer(serializers.ModelSerializer):
     def validate_profile_image(self, image):
         if image is None:
             return image
-        
-        # 5MB Size limit 
-        if image.size > 5 * 1024 * 1024:
+
+        # 5MB Size limit
+        if image.size > 5*1024*1024:
             raise serializers.ValidationError('Max image size is 5MB')
-        
+
         # Real image
         try:
             img = Image.open(image)
@@ -52,6 +64,13 @@ class UserEditableSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Invalid image file')
         
         return image
+
+    def update(self, instance, validated_data):
+        avatar = validated_data.pop('avatar_id', None)
+        if avatar:
+            instance.profile_image = avatar.image
+            instance.save(update_fields=['profile_image'])
+        return super().update(instance, validated_data)
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):

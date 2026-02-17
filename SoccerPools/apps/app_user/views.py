@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
-from rest_framework.generics import RetrieveUpdateAPIView, RetrieveAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, RetrieveAPIView, ListAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import ValidationError, NotFound
 from django.views.decorators.csrf import csrf_exempt
@@ -17,10 +17,10 @@ from django.shortcuts import render
 from utils import generate_unique_field_value
 from apps.bet.models import BetLeague
 from apps.league.serializers import LeagueSerializer
-from .models import AppUser, CoinGrant
+from .models import AppUser, CoinGrant, Avatar
 from .serializers import (
     UserSerializer, AddCoinsSerializer, UserEditableSerializer, UserCoinsSerializer,
-    UserMemberSerializer
+    UserMemberSerializer, AvatarSerializer
 )
 from .services import grant_coins, add_google_picture_app_user, referral_signup
 
@@ -125,6 +125,13 @@ class UserCoinsView(RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class AvatarListView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = AvatarSerializer
+    queryset = Avatar.objects.filter(state=True)
+
 
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]

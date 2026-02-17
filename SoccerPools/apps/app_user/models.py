@@ -122,3 +122,11 @@ class CoinGrant(BaseModel):
 
     def __str__(self):
         return f'{self.user.username} - {self.get_reward_type_display()}'
+
+
+class Avatar(BaseModel):
+    image = models.ImageField(upload_to='avatars/')
+    name = models.CharField(max_length=100, blank=True)
+
+    def __str__(self):
+        return self.name or f'Avatar {self.pk}'
