@@ -130,7 +130,7 @@ class UserCoinsView(RetrieveAPIView):
 class AvatarListView(ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = AvatarSerializer
-    queryset = Avatar.objects.filter(state=True)
+    queryset = Avatar.objects.filter(state=True).order_by('name')
 
 
 class GoogleLoginView(APIView):
