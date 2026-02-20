@@ -136,12 +136,42 @@ class AvatarListView(ListAPIView):
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
 
+    ALLOWED_CLIENT_IDS = [
+        config('GOOGLE_WEB_CLIENT_ID', default=''),
+        config('GOOGLE_ANDROID_CLIENT_ID', default=''),
+        config('GOOGLE_IOS_CLIENT_ID', default=''),
+    ]
+
+    def _verify_token_audience(self, access_token):
+        """Verify that the access token was issued for one of our client IDs"""
+        token_info_url = 'https://www.googleapis.com/oauth2/v3/tokeninfo'
+        response = requests.get(token_info_url, params={'access_token': access_token})
+
+        if response.status_code != status.HTTP_200_OK:
+            logger.warning('Token info verification failed: %s', response.text)
+            return False
+
+        token_info = response.json()
+        audience = token_info.get('aud', '')
+        allowed = [cid for cid in self.ALLOWED_CLIENT_IDS if cid]
+
+        if audience not in allowed:
+            logger.warning(
+                'Token audience mismatch. Got: %s, Expected one of: %s', audience, allowed
+            )
+            return False
+
+        return True
+
     def post(self, request):
         access_token = request.data.get("accessToken")
         referral_code = request.data.get('referralCode')
 
         if not access_token:
             raise ValidationError({'access_token': 'Access token is required'})
+
+        if not self._verify_token_audience(access_token):
+            raise ValidationError({'access_token': 'Invalid or unauthorized token'})
 
         user_info_url = "https://www.googleapis.com/userinfo/v2/me"
         headers = {"Authorization": f"Bearer {access_token}"}

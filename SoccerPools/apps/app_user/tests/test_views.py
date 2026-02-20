@@ -1,5 +1,6 @@
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
+from unittest.mock import patch, MagicMock
 from django.contrib.auth import get_user_model
 from apps.app_user.models import CoinGrant
 from apps.app_user.factories import AppUserFactory
@@ -210,3 +211,110 @@ class RemoveUserTest(RemoveUserSetUp):
         self.assertEqual(MatchResult.objects.filter(state=True).count(), 0)
         self.assertEqual(BetLeague.objects.filter(state=True).count(), 0)
         self.assertEqual(BetRound.objects.filter(state=True).count(), 0)
+
+
+class GoogleLoginViewTest(APITestCase):
+    def setUp(self):
+        self.url = '/api/user/google_oauth2/'
+        self.legacy_url = '/api/user/android_google_oauth2/'
+
+    def test_missing_access_token(self):
+        response = self.client.post(self.url, {})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch('apps.app_user.views.requests.get')
+    def test_invalid_audience_rejected(self, mock_get):
+        """Token with wrong audience should be rejected"""
+        token_info_response = MagicMock()
+        token_info_response.status_code = 200
+        token_info_response.json.return_value = {'aud': 'some-other-app-client-id'}
+        mock_get.return_value = token_info_response
+
+        response = self.client.post(self.url, {'accessToken': 'fake-token'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('access_token', response.data.get('errors', response.data))
+
+    @patch('apps.app_user.views.requests.get')
+    @patch('apps.app_user.views.add_google_picture_app_user')
+    def test_valid_google_login_creates_user(self, mock_picture, mock_get):
+        """Valid Google token should create user and return JWT tokens"""
+        token_info_response = MagicMock()
+        token_info_response.status_code = 200
+        token_info_response.json.return_value = {
+            'aud': '758848666906-of896o3nh91kutmk5dinhja0tsjftscs.apps.googleusercontent.com'
+        }
+
+        user_info_response = MagicMock()
+        user_info_response.status_code = 200
+        user_info_response.json.return_value = {
+            'email': 'newuser@gmail.com',
+            'given_name': 'Test',
+            'family_name': 'User',
+            'name': 'Test User',
+            'picture': 'https://lh3.googleusercontent.com/photo.jpg',
+        }
+
+        mock_get.side_effect = [token_info_response, user_info_response]
+
+        response = self.client.post(self.url, {'accessToken': 'valid-google-token'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+        self.assertTrue(User.objects.filter(email='newuser@gmail.com').exists())
+
+    @patch('apps.app_user.views.requests.get')
+    @patch('apps.app_user.views.add_google_picture_app_user')
+    def test_existing_user_login(self, mock_picture, mock_get):
+        """Existing user should get tokens without creating a duplicate"""
+        User.objects.create_user(
+            username='existinguser', email='existing@gmail.com',
+            name='Existing', last_name='User', password='testpass123'
+        )
+
+        token_info_response = MagicMock()
+        token_info_response.status_code = 200
+        token_info_response.json.return_value = {
+            'aud': '758848666906-of896o3nh91kutmk5dinhja0tsjftscs.apps.googleusercontent.com'
+        }
+
+        user_info_response = MagicMock()
+        user_info_response.status_code = 200
+        user_info_response.json.return_value = {
+            'email': 'existing@gmail.com',
+            'given_name': 'Existing',
+            'family_name': 'User',
+            'name': 'Existing User',
+            'picture': 'https://lh3.googleusercontent.com/photo.jpg',
+        }
+
+        mock_get.side_effect = [token_info_response, user_info_response]
+
+        response = self.client.post(self.url, {'accessToken': 'valid-google-token'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(User.objects.filter(email='existing@gmail.com').count(), 1)
+
+    @patch('apps.app_user.views.requests.get')
+    @patch('apps.app_user.views.add_google_picture_app_user')
+    def test_legacy_endpoint_still_works(self, mock_picture, mock_get):
+        """The old android_google_oauth2 endpoint should still work"""
+        token_info_response = MagicMock()
+        token_info_response.status_code = 200
+        token_info_response.json.return_value = {
+            'aud': '758848666906-of896o3nh91kutmk5dinhja0tsjftscs.apps.googleusercontent.com'
+        }
+
+        user_info_response = MagicMock()
+        user_info_response.status_code = 200
+        user_info_response.json.return_value = {
+            'email': 'legacy@gmail.com',
+            'given_name': 'Legacy',
+            'family_name': 'User',
+            'name': 'Legacy User',
+            'picture': 'https://lh3.googleusercontent.com/photo.jpg',
+        }
+
+        mock_get.side_effect = [token_info_response, user_info_response]
+
+        response = self.client.post(self.legacy_url, {'accessToken': 'valid-google-token'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
