@@ -6,10 +6,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count, Case, When, IntegerField
 from apps.bet.models import BetLeague
 from .models import Tournament, TournamentUser
 from .serializers import TournamentSerializer, TournamentUserSerializer
+from .pagination import TournamentPagination
 from .utils import generate_default_logo, send_tournament_user_notification
 
 logger = logging.getLogger(__name__)
@@ -17,6 +18,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
     serializer_class = TournamentSerializer
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Tournament.objects.all()
+    pagination_class = TournamentPagination
 
     def create(self, request):
         with transaction.atomic(): 
@@ -55,39 +57,88 @@ class TournamentViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def list(self, request):
-        """
-            Retrieve query param values search_text and league_id
-            If search_text is empty, return all the tournaments where the tournaments_user
-            states are pending or accepted, and the league_id matches
-            If search_text is not empty, return the same tournaments, or tournaments where
-            its name contains the search_text, despite they are in the tournaments_user or not
-        """
-        user = self.request.user
-        search_text = self.request.query_params.get('search_text', '')
-        league_id = self.request.query_params.get('league_id', '')
+        user = request.user
+        search_text = request.query_params.get('search_text', '')
+        league_id = request.query_params.get('league_id', '')
 
-        tournaments_user = TournamentUser.objects.filter(
-            Q(tournament_user_state=TournamentUser.PENDING) |
-            Q(tournament_user_state=TournamentUser.ACCEPTED),
-            state=True,
-            user=user
+        if not league_id:
+            return Response(
+                {'detail': 'league_id is required'}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # IDs of tournaments where the user is PENDING or ACCEPTED
+        user_tournament_ids = list(
+            TournamentUser.objects.filter(
+                Q(tournament_user_state=TournamentUser.PENDING) |
+                Q(tournament_user_state=TournamentUser.ACCEPTED),
+                state=True,
+                user=user
+            ).values_list('tournament_id', flat=True)
         )
         tournaments = Tournament.objects.filter(
             state=True,
             league__id=league_id
-        )
-        if search_text == '':
-            tournaments = tournaments.filter(
-                id__in=tournaments_user.values('tournament'),
+        ).annotate(
+            participants_count=Count(
+                'tournamentuser',
+                filter=Q(
+                    tournamentuser__state=True,
+                    tournamentuser__tournament_user_state=TournamentUser.ACCEPTED
+                )
+            ),
+            is_user_member=Case(
+                When(id__in=user_tournament_ids, then=0),
+                default=1,
+                output_field=IntegerField()
             )
-        else:
-            tournaments = tournaments.filter(
-                Q(id__in=tournaments_user.values('tournament')) |
-                Q(name__icontains=search_text),
-            )
+        ).order_by('is_user_member', '-participants_count', 'name')
+
+        if search_text:
+            tournaments = tournaments.filter(name__icontains=search_text)
+
+        page = self.paginate_queryset(tournaments)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(tournaments, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='join')
+    def join(self, request, pk=None):
+        """Join a tournament"""
+        user = request.user
+        tournament = get_object_or_404(Tournament, id=pk, state=True)
+
+        existing = TournamentUser.objects.filter(
+            tournament=tournament, user=user, state=True
+        ).first()
+        if existing:
+            return Response(
+                {'detail': 'Already requested or joined this tournament.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if tournament.tournament_type == Tournament.PUBLIC:
+            tournament_user = TournamentUser.objects.create(
+                tournament=tournament,
+                user=user,
+                tournament_user_state=TournamentUser.ACCEPTED
+            )
+            logger.info('User %s joined PUBLIC tournament %s', user.username, tournament.name)
+        else:
+            tournament_user = TournamentUser.objects.create(
+                tournament=tournament,
+                user=user,
+                tournament_user_state=TournamentUser.PENDING
+            )
+            send_tournament_user_notification(user, tournament_user, TournamentUser.PENDING)
+            logger.info(
+                'User %s requested to join PRIVATE tournament %s', user.username, tournament.name
+            )
+
+        serializer = TournamentUserSerializer(tournament_user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class TournamentUserViewSet(viewsets.ModelViewSet):

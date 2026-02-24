@@ -10,15 +10,15 @@ from apps.league.factories import LeagueFactory, RoundFactory, TeamFactory
 from apps.league.models import Round
 from apps.match.factories import MatchFactory
 from apps.match.models import Match, MatchResult
-from .models import Payment, PaidBetRound, PaidPrizePool, PaidWinner
-from .factories import ( 
+from apps.payment.models import Payment, PaidBetRound, PaidPrizePool, PaidWinner
+from apps.payment.factories import ( 
     PaidLeagueConfigFactory, PaymentFactory, PaidBetRoundFactory, PaidPrizePoolFactory,
 )
-from .services import (
+from apps.payment.services import (
     calculate_payment_amounts, create_round_payment, create_league_payment,
     process_approved_payment, distribute_round_prizes, update_payment_from_webhook,
 )
-from .tasks import update_league_prices
+from apps.payment.tasks import update_league_prices
 
 class PaymentAmountCalculationTest(TestCase):
     """Test payment amount calculations"""
@@ -531,7 +531,7 @@ class WebhookSignatureVerificationTest(APITestCase):
         """Test webhook returns 403 when X-Signature header is missing"""
         mock_settings.MERCADOPAGO_WEBHOOK_SECRET = 'test_secret_key'
 
-        response = self.client.post(self.url, data={'type': 'payment', 'data': {'id': '123'}})
+        response = self.client.post(self.url, data={'type': 'payment', 'data': {'id': '123'}}, format='json')
 
         self.assertEqual(response.status_code, 403)
 
@@ -543,6 +543,7 @@ class WebhookSignatureVerificationTest(APITestCase):
         response = self.client.post(
             self.url + '?data.id=123',
             data={'type': 'payment', 'data': {'id': '123'}},
+            format='json',
             HTTP_X_SIGNATURE='ts=1234567890,v1=invalidsignature',
             HTTP_X_REQUEST_ID='req-123',
         )
@@ -572,6 +573,7 @@ class WebhookSignatureVerificationTest(APITestCase):
         response = self.client.post(
             self.url + f'?data.id={data_id}&topic=payment&id={data_id}',
             data={'type': 'payment', 'data': {'id': data_id}},
+            format='json',
             HTTP_X_SIGNATURE=f'ts={ts},v1={computed}',
             HTTP_X_REQUEST_ID=request_id,
         )

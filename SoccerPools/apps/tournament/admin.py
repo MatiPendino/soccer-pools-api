@@ -10,7 +10,8 @@ class TournamentResources(resources.ModelResource):
 
 class TournamentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     search_fields = ('name', 'league__name', 'admin_tournament__username', 'admin_tournament__name')
-    list_display = ('name', 'get_league_name', 'get_admin_username')
+    list_display = ('name', 'get_league_name', 'get_admin_username', 'tournament_type')
+    list_filter = ('tournament_type',)
     resource_class = TournamentResources
 
     def get_league_name(self, obj):
