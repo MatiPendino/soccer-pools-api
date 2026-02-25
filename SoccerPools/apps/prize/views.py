@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class PrizeViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PrizeSerializer
     permission_classes = [AllowAny]
-    queryset = Prize.objects.filter(state=True)
+    queryset = Prize.objects.filter(state=True).order_by('coins_cost')
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def claim(self, request, pk=None):
