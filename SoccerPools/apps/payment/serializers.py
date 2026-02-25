@@ -125,11 +125,15 @@ class PaidBetRoundDetailSerializer(PaidBetRoundSerializer):
 class PaidPrizePoolSerializer(serializers.ModelSerializer):
     league_name = serializers.CharField(source='league.name', read_only=True)
     round_name = serializers.CharField(source='round.name', read_only=True)
+    effective_pool_ars = serializers.DecimalField(
+        max_digits=12, decimal_places=2, read_only=True
+    )
 
     class Meta:
         model = PaidPrizePool
         fields = (
-            'id', 'league_name', 'round_name', 'is_league_pool', 'total_pool_ars', 'distributed',
+            'id', 'league_name', 'round_name', 'is_league_pool', 'total_pool_ars',
+            'minimum_pool_ars', 'effective_pool_ars', 'distributed',
         )
 
 

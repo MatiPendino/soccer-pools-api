@@ -414,6 +414,8 @@ class RoundPrizePoolView(APIView):
         if not prize_pool:
             return Response({
                 'total_pool_ars': '0.00',
+                'minimum_pool_ars': '30000.00',
+                'effective_pool_ars': '30000.00',
                 'distributed': False,
                 'participants_count': 0,
             })

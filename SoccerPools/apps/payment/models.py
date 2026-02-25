@@ -110,11 +110,16 @@ class PaidPrizePool(BaseModel):
     )
     is_league_pool = models.BooleanField(default=False)
     total_pool_ars = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    minimum_pool_ars = models.DecimalField(max_digits=12, decimal_places=2, default=30000.00)
     distributed = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Paid Prize Pool'
         verbose_name_plural = 'Paid Prize Pools'
+
+    @property
+    def effective_pool_ars(self):
+        return max(self.total_pool_ars, self.minimum_pool_ars)
 
     def __str__(self):
         return f'{self.league.name} - ${self.total_pool_ars}'

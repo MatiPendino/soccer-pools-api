@@ -52,6 +52,7 @@ class PaidPrizePoolFactory(factory.django.DjangoModelFactory):
     round = factory.SubFactory(RoundFactory)
     is_league_pool = False
     total_pool_ars = Decimal('1000.00')
+    minimum_pool_ars = Decimal('0')
     distributed = False
 
 

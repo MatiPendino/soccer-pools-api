@@ -192,6 +192,7 @@ class PrizeDistributionTest(TestCase):
             league=self.league,
             round=self.round,
             total_pool_ars=Decimal('1000.00'),
+            minimum_pool_ars=Decimal('0'),
             distributed=False
         )
         self.users = [AppUserFactory() for _ in range(3)]
@@ -630,3 +631,119 @@ class WebhookAtomicProcessingTest(TestCase):
 
         # Only 1 PaidBetRound should exist
         self.assertEqual(PaidBetRound.objects.filter(user=self.user, round=self.round).count(), 1)
+
+
+class MinimumGuaranteedPoolTest(TestCase):
+    """Test minimum guaranteed pool feature"""
+
+    def test_effective_pool_returns_minimum_when_total_is_lower(self):
+        """Test that effective_pool_ars returns minimum when total < minimum"""
+        pool = PaidPrizePoolFactory(
+            total_pool_ars=Decimal('5000.00'),
+            minimum_pool_ars=Decimal('30000.00'),
+        )
+        self.assertEqual(pool.effective_pool_ars, Decimal('30000.00'))
+
+    def test_effective_pool_returns_total_when_total_is_higher(self):
+        """Test that effective_pool_ars returns total when total > minimum"""
+        pool = PaidPrizePoolFactory(
+            total_pool_ars=Decimal('50000.00'),
+            minimum_pool_ars=Decimal('30000.00'),
+        )
+        self.assertEqual(pool.effective_pool_ars, Decimal('50000.00'))
+
+    def test_effective_pool_when_both_equal(self):
+        """Test that effective_pool_ars works when total equals minimum"""
+        pool = PaidPrizePoolFactory(
+            total_pool_ars=Decimal('30000.00'),
+            minimum_pool_ars=Decimal('30000.00'),
+        )
+        self.assertEqual(pool.effective_pool_ars, Decimal('30000.00'))
+
+    def test_prizes_use_minimum_when_total_is_lower(self):
+        """Test that prize distribution uses minimum guaranteed pool"""
+        league = LeagueFactory()
+        round_obj = RoundFactory(
+            league=league, round_state=Round.FINALIZED_ROUND, is_general_round=False
+        )
+        team_1 = TeamFactory()
+        team_2 = TeamFactory()
+        match = MatchFactory(
+            round=round_obj, team_1=team_1, team_2=team_2, match_state=Match.FINALIZED_MATCH
+        )
+        prize_pool = PaidPrizePoolFactory(
+            league=league,
+            round=round_obj,
+            total_pool_ars=Decimal('5000.00'),
+            minimum_pool_ars=Decimal('30000.00'),
+            distributed=False,
+        )
+
+        users = [AppUserFactory() for _ in range(3)]
+        for i, user in enumerate(users):
+            bet_league = BetLeague.objects.create(user=user, league=league)
+            bet_round = BetRound.objects.create(bet_league=bet_league, round=round_obj)
+            payment = PaymentFactory(user=user, league=league, round=round_obj)
+            paid_bet_round = PaidBetRoundFactory(
+                user=user, round=round_obj, payment=payment
+            )
+            MatchResult.objects.create(
+                bet_round=bet_round,
+                paid_bet_round=paid_bet_round,
+                match=match,
+                goals_team_1=i, goals_team_2=0,
+                points=3 - i, is_exact=(i == 0)
+            )
+
+        result = distribute_round_prizes(round_obj)
+        self.assertTrue(result)
+
+        # Prizes should be based on 30000 (minimum), not 5000 (total)
+        winners = PaidWinner.objects.filter(prize_pool=prize_pool).order_by('position')
+        self.assertEqual(winners[0].prize_amount_ars, Decimal('21000.00'))
+        self.assertEqual(winners[1].prize_amount_ars, Decimal('6000.00'))
+        self.assertEqual(winners[2].prize_amount_ars, Decimal('3000.00'))
+
+    def test_prizes_use_total_when_higher_than_minimum(self):
+        """Test that prize distribution uses total when it exceeds minimum"""
+        league = LeagueFactory()
+        round_obj = RoundFactory(
+            league=league, round_state=Round.FINALIZED_ROUND, is_general_round=False
+        )
+        team_1 = TeamFactory()
+        team_2 = TeamFactory()
+        match = MatchFactory(
+            round=round_obj, team_1=team_1, team_2=team_2, match_state=Match.FINALIZED_MATCH
+        )
+        prize_pool = PaidPrizePoolFactory(
+            league=league,
+            round=round_obj,
+            total_pool_ars=Decimal('50000.00'),
+            minimum_pool_ars=Decimal('30000.00'),
+            distributed=False,
+        )
+
+        users = [AppUserFactory() for _ in range(3)]
+        for i, user in enumerate(users):
+            bet_league = BetLeague.objects.create(user=user, league=league)
+            bet_round = BetRound.objects.create(bet_league=bet_league, round=round_obj)
+            payment = PaymentFactory(user=user, league=league, round=round_obj)
+            paid_bet_round = PaidBetRoundFactory(
+                user=user, round=round_obj, payment=payment
+            )
+            MatchResult.objects.create(
+                bet_round=bet_round,
+                paid_bet_round=paid_bet_round,
+                match=match,
+                goals_team_1=i, goals_team_2=0,
+                points=3 - i, is_exact=(i == 0)
+            )
+
+        result = distribute_round_prizes(round_obj)
+        self.assertTrue(result)
+
+        # Prizes should be based on 50000 (total), not 30000 (minimum)
+        winners = PaidWinner.objects.filter(prize_pool=prize_pool).order_by('position')
+        self.assertEqual(winners[0].prize_amount_ars, Decimal('35000.00'))
+        self.assertEqual(winners[1].prize_amount_ars, Decimal('10000.00'))
+        self.assertEqual(winners[2].prize_amount_ars, Decimal('5000.00'))

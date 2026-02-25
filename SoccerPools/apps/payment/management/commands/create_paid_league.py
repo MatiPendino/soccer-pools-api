@@ -30,6 +30,11 @@ class Command(BaseCommand):
             default=Decimal('25.00'),
         )
         parser.add_argument(
+            '--minimum-pool',
+            type=Decimal,
+            default=Decimal('30000.00'),
+        )
+        parser.add_argument(
             '--create-prize-pools',
             action='store_true',
             help='Create empty PaidPrizePool entries for all existing rounds'
@@ -57,6 +62,7 @@ class Command(BaseCommand):
         round_price = options['round_price']
         league_price = options['league_price']
         platform_fee = options['platform_fee']
+        minimum_pool = options['minimum_pool']
         create_prize_pools = options['create_prize_pools']
         is_enabled = not options['disabled']
         start_round = options['start_round']
@@ -80,6 +86,7 @@ class Command(BaseCommand):
         self.stdout.write(f'Round price: ${round_price} ARS')
         self.stdout.write(f'League price: ${league_price} ARS (15% discount)')
         self.stdout.write(f'Platform fee: {platform_fee}%')
+        self.stdout.write(f'Minimum pool: ${minimum_pool} ARS')
         self.stdout.write(f'Start round: {start_round}')
         self.stdout.write(f'Enabled: {is_enabled}')
 
@@ -117,6 +124,7 @@ class Command(BaseCommand):
                         is_league_pool=False,
                         defaults={
                             'total_pool_ars': Decimal('0.00'),
+                            'minimum_pool_ars': minimum_pool,
                             'distributed': False,
                         }
                     )

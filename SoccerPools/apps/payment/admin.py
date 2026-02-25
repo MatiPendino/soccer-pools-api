@@ -54,9 +54,16 @@ class PaidBetRoundAdmin(admin.ModelAdmin):
 
 @admin.register(PaidPrizePool)
 class PaidPrizePoolAdmin(admin.ModelAdmin):
-    list_display = ('id', 'league', 'round', 'total_pool_ars', 'distributed',)
+    list_display = (
+        'id', 'league', 'round', 'total_pool_ars', 'minimum_pool_ars',
+        'get_effective_pool_ars', 'distributed',
+    )
     list_filter = ('distributed',)
     search_fields = ('league__name', 'round__name')
+
+    def get_effective_pool_ars(self, obj):
+        return obj.effective_pool_ars
+    get_effective_pool_ars.short_description = 'Effective Pool'
 
 
 @admin.register(PaidWinner)

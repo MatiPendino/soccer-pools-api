@@ -374,7 +374,7 @@ def distribute_round_prizes(round):
             logger.info('No undistributed prize pool for round %s', round.name)
             return True
 
-        if prize_pool.total_pool_ars <= 0:
+        if prize_pool.effective_pool_ars <= 0:
             prize_pool.distributed = True
             prize_pool.save()
             return True
@@ -405,7 +405,7 @@ def distribute_round_prizes(round):
 
         with transaction.atomic():
             # Calculate prize amounts
-            total = prize_pool.total_pool_ars
+            total = prize_pool.effective_pool_ars
             first_prize = total * FIRST_PLACE_PERCENTAGE
             second_prize = total * SECOND_PLACE_PERCENTAGE
             third_prize = total * THIRD_PLACE_PERCENTAGE
