@@ -30,14 +30,14 @@ class League(BaseModel):
     )
 
     # Multipliers for Coin Prizes
-    COINS_FIRST_PRIZE_MULT = 250
-    COINS_SECOND_PRIZE_MULT = 100
-    COINS_THIRD_PRIZE_MULT = 50
+    COINS_FIRST_PRIZE_MULT = 1000
+    COINS_SECOND_PRIZE_MULT = 400
+    COINS_THIRD_PRIZE_MULT = 200
 
     # Minimum Coin Prizes
-    DEFAULT_MIN_COINS_FIRST = 50000
-    DEFAULT_MIN_COINS_SECOND = 20000
-    DEFAULT_MIN_COINS_THIRD = 10000
+    DEFAULT_MIN_COINS_FIRST = 200000
+    DEFAULT_MIN_COINS_SECOND = 80000
+    DEFAULT_MIN_COINS_THIRD = 40000
 
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, null=True, blank=True)
@@ -97,14 +97,14 @@ class Round(BaseModel):
     )
 
     # Multipliers for Coin Prizes
-    COINS_FIRST_PRIZE_MULT = 50
-    COINS_SECOND_PRIZE_MULT = 20
-    COINS_THIRD_PRIZE_MULT = 10
+    COINS_FIRST_PRIZE_MULT = 200
+    COINS_SECOND_PRIZE_MULT = 80
+    COINS_THIRD_PRIZE_MULT = 40
 
     # Minimum Coin Prizes
-    DEFAULT_MIN_COINS_FIRST = 5000
-    DEFAULT_MIN_COINS_SECOND = 2000
-    DEFAULT_MIN_COINS_THIRD = 1000
+    DEFAULT_MIN_COINS_FIRST = 20000
+    DEFAULT_MIN_COINS_SECOND = 8000
+    DEFAULT_MIN_COINS_THIRD = 4000
 
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True, null=True)
