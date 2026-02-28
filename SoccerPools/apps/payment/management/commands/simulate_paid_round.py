@@ -29,7 +29,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--random-predictions',
             action='store_true',
-            help='Generate random match predictions (0-5 goals)'
+            help='Generate random match predictions (0-2 goals)'
         )
         parser.add_argument(
             '--status',
@@ -146,8 +146,8 @@ class Command(BaseCommand):
                     # Generate random predictions if requested
                     if random_predictions and match_results.exists():
                         for mr in match_results:
-                            mr.goals_team_1 = random.randint(0, 5)
-                            mr.goals_team_2 = random.randint(0, 5)
+                            mr.goals_team_1 = random.randint(0, 2)
+                            mr.goals_team_2 = random.randint(0, 2)
                             mr.save()
 
                         self.stdout.write(
