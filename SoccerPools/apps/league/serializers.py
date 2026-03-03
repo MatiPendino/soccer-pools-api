@@ -40,8 +40,9 @@ class RoundSerializer(serializers.ModelSerializer):
     league = LeagueSerializer()
 
     def get_has_bet_round(self, obj):
+        if hasattr(obj, 'has_bet_round'):
+            return obj.has_bet_round
         request = self.context.get('request')
-
         if request and request.user.is_authenticated:
             return BetRound.objects.filter(
                 state=True,
@@ -49,6 +50,12 @@ class RoundSerializer(serializers.ModelSerializer):
                 round=obj
             ).exists()
         return False
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if hasattr(instance, 'league_is_user_joined'):
+            data['league']['is_user_joined'] = instance.league_is_user_joined
+        return data
 
 
 class TeamSerializer(serializers.ModelSerializer):

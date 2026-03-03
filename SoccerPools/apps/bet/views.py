@@ -45,16 +45,17 @@ class BetRoundResultsApiView(generics.ListAPIView):
     def get_queryset(self,):
         round_slug = self.kwargs.get('round_slug')
         tournament_id = self.kwargs.get('tournament_id')
-        bet_rounds = BetRound.objects.with_matches_points(round_slug=round_slug)
+        bet_rounds = BetRound.objects.with_matches_points(
+            round_slug=round_slug
+        ).select_related('bet_league__user', 'round')
 
         if tournament_id != 0:
-            tournament_users = TournamentUser.objects.filter(
+            user_ids = TournamentUser.objects.filter(
                 tournament__id=tournament_id,
                 tournament_user_state=TournamentUser.ACCEPTED
-            )
-            users = [tournament_user.user for tournament_user in tournament_users]
+            ).values_list('user_id', flat=True)
 
-            bet_rounds = bet_rounds.filter(bet_league__user__in=users)
+            bet_rounds = bet_rounds.filter(bet_league__user__in=user_ids)
 
         return bet_rounds
 

@@ -1,6 +1,11 @@
+from django.db.models import Exists, OuterRef
 from rest_framework import generics
+
+from apps.bet.models import BetLeague, BetRound
+
 from .serializers import LeagueSerializer, RoundSerializer, TeamSerializer
 from .models import League, Round, Team
+
 
 class LeagueListApiView(generics.ListAPIView):
     serializer_class = LeagueSerializer
@@ -41,15 +46,33 @@ class RoundListApiView(generics.ListAPIView):
         """
         league_id = self.kwargs.get('pk')
         not_general_round = self.request.query_params.get('not_general_round')
+        user = self.request.user
+
         rounds = Round.objects.filter(
             league__id=league_id, 
             state=True
-        ).order_by('number_round')
+        ).select_related('league').order_by('number_round')
+
+        if user.is_authenticated:
+            rounds = rounds.annotate(
+                has_bet_round=Exists(
+                    BetRound.objects.filter(
+                        state=True,
+                        bet_league__user=user,
+                        round=OuterRef('pk')
+                    )
+                ),
+                league_is_user_joined=Exists(
+                    BetLeague.objects.filter(
+                        state=True,
+                        user=user,
+                        league_id=OuterRef('league_id')
+                    )
+                )
+            )
 
         if not_general_round != 'undefined':
-            rounds = rounds.filter(
-                is_general_round=False
-            )
+            rounds = rounds.filter(is_general_round=False)
 
         return rounds
 
