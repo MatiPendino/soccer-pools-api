@@ -23,4 +23,4 @@ RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "30", "--graceful-timeout", "30", "--keep-alive", "2", "--max-requests", "500", "--max-requests-jitter", "50","SoccerPools.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "30", "--graceful-timeout", "30", "--keep-alive", "2", "--max-requests", "500", "--max-requests-jitter", "50","SoccerPools.wsgi:application"]
