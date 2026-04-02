@@ -1,4 +1,4 @@
-from django.db.models import Exists, OuterRef
+from django.db.models import Case, Exists, IntegerField, OuterRef, Value, When
 from rest_framework import generics
 
 from apps.bet.models import BetLeague, BetRound
@@ -17,7 +17,13 @@ class LeagueListApiView(generics.ListAPIView):
         leagues = League.objects.filter(
             state=True,
             league_state__in=[League.NOT_STARTED_LEAGUE, League.PENDING_LEAGUE]
-        ).order_by('name')
+        ).annotate(
+            order_display_null=Case(
+                When(order_display__isnull=True, then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+        ).order_by('order_display_null', 'order_display', 'name')
         if continent in [
             League.AMERICAS, League.AFRICA, League.EUROPE, League.ASIA, League.OCEANIA, 
             League.TOURNAMENTS

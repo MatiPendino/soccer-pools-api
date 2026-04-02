@@ -45,6 +45,7 @@ class League(BaseModel):
     logo_url = models.URLField(blank=True, null=True)
     continent = models.PositiveSmallIntegerField(default=0, choices=LEAGUE_CONTINENTS)
     api_league_id = models.PositiveIntegerField(unique=True, blank=True, null=True)
+    order_display = models.PositiveSmallIntegerField(blank=True, null=True)
     coins_cost = models.PositiveIntegerField(default=1000)
     is_cup = models.BooleanField(help_text='If True, this league has a Cup format', default=False)
     league_state = models.PositiveSmallIntegerField('State of the league', default=0, choices=STATE_CODES)
